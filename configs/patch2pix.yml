@@ -1,0 +1,50 @@
+default: &default
+    class: 'Patch2Pix'
+    ckpt: 'pretrained/patch2pix/patch2pix_pretrained.pth'
+    ksize: 2
+    imsize: 1024
+    match_threshold: 0.25
+    no_match_upscale: False
+example:
+    <<: *default
+    match_threshold: 0.5
+    imsize: -1
+hpatch:
+    <<: *default
+    imsize: 1024
+    no_match_upscale: True
+inloc:
+    <<: *default
+    pairs: 'pairs-query-netvlad40-temporal.txt' 
+    rthres: 48
+    skip_matches: 20
+aachen:
+    <<: *default
+    match_threshold: 0.0 # Save all matches
+    pairs: ['pairs-db-covis20.txt', 'pairs-query-netvlad30.txt']
+    qt_dthres: 4
+    qt_psize: 48
+    qt_unique: True
+    ransac_thres: [12]
+    sc_thres: 0.25 # Filtering during quantization
+    covis_cluster: True
+aachen_v1.1:
+    <<: *default
+    match_threshold: 0.0 # Save all matches
+    pairs: ['pairs-db-covis20.txt', 'pairs-query-netvlad50.txt']
+    qt_dthres: 4
+    qt_psize: 48
+    qt_unique: True
+    ransac_thres: [20]
+    sc_thres: 0.25 # Filtering during quantization
+    covis_cluster: True
+aachen_night:
+    <<: *default
+    match_threshold: 0.0 # Save all matches
+    pairs: ['pairs-db-night_benchmark.txt', 'pairs-query-night_benchmark.txt']
+    qt_dthres: 4
+    qt_psize: 48
+    qt_unique: True
+    ransac_thres: [20]
+    sc_thres: 0.25 # Filtering during quantization
+    covis_cluster: False
