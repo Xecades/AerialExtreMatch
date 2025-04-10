@@ -1,0 +1,7 @@
+default: &default
+  class: "DISK_LightGlue"
+  no_match_upscale: False
+  num_features: 2048
+example:
+  <<: *default
+  imsize: -1

@@ -37,6 +37,11 @@ class SuperGlue(Matching):
             if isinstance(data[k], (list, tuple)):
                 data[k] = torch.stack(data[k])
 
+        # print(data["keypoints0"].shape, data["descriptors0"].shape)
+        # print(data["keypoints1"].shape, data["descriptors1"].shape)
+        # torch.Size([1, 377, 2]) torch.Size([1, 256, 377])
+        # torch.Size([1, 698, 2]) torch.Size([1, 256, 698])
+
         # SuperGlue matching
         pred = {**pred, **self.model(data)}
         pred = {k: v[0].cpu().numpy() for k, v in pred.items()}

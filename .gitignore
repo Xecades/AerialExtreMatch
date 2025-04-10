@@ -1,6 +1,6 @@
 # Manually added ignores
 outputs/
-data/
+data
 pretrained/
 !pretrained/download.sh
 benchmark/
@@ -139,3 +139,7 @@ dmypy.json
 pretrained/
 third_party/
 docs/
+
+class_*.txt
+matches_*.png
+test.py

@@ -1,0 +1,7 @@
+default: &default
+  class: "SP_LightGlue"
+  no_match_upscale: False
+example:
+  <<: *default
+  match_threshold: 0.5
+  imsize: -1
