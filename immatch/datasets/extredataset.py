@@ -1,8 +1,6 @@
 import numpy as np
-import torchvision.transforms.functional as tvf
 import torch
 import os
-from PIL import Image
 
 class ExtreData:
     def __init__(
@@ -36,10 +34,10 @@ class ExtreData:
         # Load positive pair data
         im_A, im_B = self.image_paths[idx1], self.image_paths[idx2]
         depth1, depth2 = self.depth_paths[idx1], self.depth_paths[idx2]
-        im_A_ref = os.path.join(self.data_root, im_A)
-        im_B_ref = os.path.join(self.data_root, im_B)
-        depth_A_ref = os.path.join(self.data_root, depth1)
-        depth_B_ref = os.path.join(self.data_root, depth2)
+        im_A_ref = os.path.join(self.data_root, 'rgb',im_A)
+        im_B_ref = os.path.join(self.data_root, 'rgb',im_B)
+        depth_A_ref = os.path.join(self.data_root, 'depth', depth1)
+        depth_B_ref = os.path.join(self.data_root,  'depth', depth2)
 
         data_dict = {
             "K1": K1,
@@ -52,3 +50,26 @@ class ExtreData:
         }
 
         return data_dict
+    
+
+class ExtreDataBuilder:
+    def __init__(self, data_root: str = "./data/feicuiwan") -> None:
+        self.data_root = data_root
+        self.all_scenes = set(os.listdir(self.data_root))
+    
+    def build_scenes(self, **kwargs):
+        scene_names = self.all_scenes
+        scenes = []
+        for scene_name in scene_names:
+            if ".npy" not in scene_name:
+                continue
+            scene_info_path = os.path.join(self.data_root, scene_name)
+            scene_info = np.load(scene_info_path, allow_pickle=True).item()
+            scenes.append(
+                ExtreData(
+                    data_root=self.data_root,
+                    scene_info=scene_info,
+                    **kwargs
+                )
+            )
+        return scenes

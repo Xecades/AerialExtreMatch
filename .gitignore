@@ -3,6 +3,7 @@ outputs/
 data/
 pretrained/
 !pretrained/download.sh
+benchmark/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

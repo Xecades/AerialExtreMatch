@@ -3,7 +3,7 @@ import torch
 import numpy as np
 import cv2
 
-from third_party.caps.CAPS.network import CAPSNet
+# from third_party.caps.CAPS.network import CAPSNet
 from immatch.utils.data_io import load_im_tensor
 from .base import FeatureDetection, Matching
 from .superpoint import SuperPoint
