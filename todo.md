@@ -1,3 +1,7 @@
+## question
+
+ - 各种参数怎么处理？
+
 ## task
 
 1. image-matching-toolbox，rubik有的都要有，除了vggt，按照之前dataset的格式
@@ -10,7 +14,7 @@
  - [ ] ALIKED+LightGlue
  - [x] DISK+LightGlue
  - [x] SP+LightGlue
- - [ ] SIFT+LightGlue
+ - [x] SIFT+LightGlue
  - [ ] DeDoDe v2
  - [ ] XFeat
  - [ ] XFeat*

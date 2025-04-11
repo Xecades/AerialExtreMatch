@@ -2,20 +2,20 @@ import torch
 import numpy as np
 
 from .base import Matching
-from third_party.LightGlue.lightglue import LightGlue, SuperPoint
+from third_party.LightGlue.lightglue import LightGlue, SIFT
 from immatch.utils.data_io import load_im_tensor
 
 
-class SP_LightGlue(Matching):
+class SIFT_LightGlue(Matching):
     def __init__(self, args):
         super().__init__()
         self.imsize = args["imsize"]
         self.no_match_upscale = args["no_match_upscale"]
 
-        self.extractor = SuperPoint().eval().to(self.device)
-        self.matcher = LightGlue(features="superpoint").eval().to(self.device)
+        self.extractor = SIFT().eval().to(self.device)
+        self.matcher = LightGlue(features="sift").eval().to(self.device)
 
-        self.name = f"SP_LightGlue"
+        self.name = f"SIFT_LightGlue"
         if self.no_match_upscale:
             self.name += "_noms"
 

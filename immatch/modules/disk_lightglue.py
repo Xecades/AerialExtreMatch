@@ -2,8 +2,7 @@ import torch
 import numpy as np
 
 from .base import Matching
-import kornia as K
-import kornia.feature as KF
+from third_party.LightGlue.lightglue import LightGlue, DISK
 from immatch.utils.data_io import load_im_tensor
 
 
@@ -11,13 +10,10 @@ class DISK_LightGlue(Matching):
     def __init__(self, args):
         super().__init__()
         self.imsize = args["imsize"]
-        self.num_features = args["num_features"]
         self.no_match_upscale = args["no_match_upscale"]
 
-        self.device = K.utils.get_cuda_or_mps_device_if_available()
-
-        self.disk = KF.DISK.from_pretrained("depth").eval().to(self.device)
-        self.lg = KF.LightGlue("disk").eval().to(self.device)
+        self.extractor = DISK().eval().to(self.device)
+        self.matcher = LightGlue(features="disk").eval().to(self.device)
 
         self.name = f"DISK_LightGlue"
         if self.no_match_upscale:
@@ -31,36 +27,18 @@ class DISK_LightGlue(Matching):
             device=self.device,
             imsize=self.imsize,
         )
-        # return load_gray_scale_tensor_cv(im_path, self.device, imsize=self.imsize)
-        # return K.io.load_image(im_path, K.io.ImageLoadType.RGB32, device=self.device)[None, ...]
 
     def match_inputs_(self, im1: torch.Tensor, im2: torch.Tensor):
         # print(im1.shape)  # [1, 3, 899, 769]
         # print(im2.shape)  # [1, 3, 1024, 768]
 
-        feat1 = self.disk(im1, self.num_features, pad_if_not_divisible=True)[0]
-        feat2 = self.disk(im2, self.num_features, pad_if_not_divisible=True)[0]
+        feat1 = self.extractor.extract(im1)
+        feat2 = self.extractor.extract(im2)
 
-        kpts1, descs1 = feat1.keypoints, feat1.descriptors
-        kpts2, descs2 = feat2.keypoints, feat2.descriptors
+        kpts1, kpts2 = feat1["keypoints"][0], feat2["keypoints"][0]
 
-        # print(kpts1.shape, descs1.shape)
-        # print(kpts2.shape, descs2.shape)
-        # torch.Size([2048, 2]) torch.Size([2048, 128])
-        # torch.Size([2048, 2]) torch.Size([2048, 128])
+        out = self.matcher({'image0': feat1, 'image1': feat2})
 
-        image0 = {
-            "keypoints": kpts1[None],
-            "descriptors": descs1[None],
-            "image_size": torch.tensor(im1.shape[-2:][::-1]).view(1, 2).to(self.device),
-        }
-        image1 = {
-            "keypoints": kpts2[None],
-            "descriptors": descs2[None],
-            "image_size": torch.tensor(im2.shape[-2:][::-1]).view(1, 2).to(self.device),
-        }
-
-        out = self.lg({"image0": image0, "image1": image1})
         idxs = out["matches"][0]  # matches are indexes of keypoints
         scores = out["scores"][0]
 

@@ -64,9 +64,10 @@ for one_test in tqdm(ExtreData_test):
         )
 
         gd = (kpts - matches_2_hat).norm(dim=-1)
-        pck_1 = (gd < 1.0).float().mean()
-        pck_3 = (gd < 3.0).float().mean()
-        pck_5 = (gd < 5.0).float().mean()
+        pck_1 = (gd < 1.0).float().mean().nan_to_num()
+        pck_3 = (gd < 3.0).float().mean().nan_to_num()
+        pck_5 = (gd < 5.0).float().mean().nan_to_num()
+        
         pck_1_tot, pck_3_tot, pck_5_tot = (
             pck_1_tot + pck_1,
             pck_3_tot + pck_3,

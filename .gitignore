@@ -143,3 +143,5 @@ docs/
 class_*.txt
 matches_*.png
 test.py
+*.tmp.*
+*.bak.*

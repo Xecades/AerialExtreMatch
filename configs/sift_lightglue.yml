@@ -1,5 +1,5 @@
 default: &default
-  class: "DISK_LightGlue"
+  class: "SIFT_LightGlue"
   no_match_upscale: False
 example:
   <<: *default
