@@ -13,7 +13,7 @@ os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-model_name = "disk_lightglue"
+model_name = "aliked_lightglue"
 
 # Initialize model
 with open(f'configs/{model_name}.yml', 'r') as f:

@@ -1,7 +1,3 @@
-## question
-
- - 各种参数怎么处理？
-
 ## task
 
 1. image-matching-toolbox，rubik有的都要有，除了vggt，按照之前dataset的格式
@@ -11,7 +7,7 @@
 
 ## Detector-based
 
- - [ ] ALIKED+LightGlue
+ - [x] ALIKED+LightGlue
  - [x] DISK+LightGlue
  - [x] SP+LightGlue
  - [x] SIFT+LightGlue
