@@ -1,0 +1,6 @@
+default: &default
+  class: "XFeat_LighterGlue"
+  no_match_upscale: False
+example:
+  <<: *default
+  imsize: -1

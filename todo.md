@@ -1,6 +1,6 @@
 ## Note
 
- - DeDoDe 在 load image 的时候没有做 normalize，因为 normalize 会导致匹配效果变差 
+ - 默认 load image 的时候没有做 normalize，因为 normalize 会导致匹配效果变差 
 
 ## task
 
@@ -15,10 +15,10 @@
  - [x] DISK+LightGlue
  - [x] SP+LightGlue
  - [x] SIFT+LightGlue
- - [ ] DeDoDe v2
- - [ ] XFeat
- - [ ] XFeat*
- - [ ] XFeat+LighterGlue
+ - [x] DeDoDe v2
+ - [x] XFeat
+ - [x] XFeat*
+ - [x] XFeat+LighterGlue
 
  - ALIKED: https://github.com/Shiaoming/ALIKED
  - LightGlue: https://github.com/cvg/LightGlue

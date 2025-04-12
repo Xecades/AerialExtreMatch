@@ -26,6 +26,7 @@ class DISK_LightGlue(Matching):
             im_path=im_path,
             device=self.device,
             imsize=self.imsize,
+            normalize=False,
         )
 
     def match_inputs_(self, im1: torch.Tensor, im2: torch.Tensor):

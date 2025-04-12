@@ -14,7 +14,7 @@ if __name__ == '__main__':
 
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-model_name = "dedode"
+model_name = "xfeat_lighterglue"
 
 # Initialize model
 with open(f'configs/{model_name}.yml', 'r') as f:
