@@ -30,9 +30,9 @@
 
 ## Detector-free
 
- - [ ] LoFTR
+ - [x] LoFTR
+ - [x] ASpanFormer
  - [ ] ELoFTR
- - [ ] ASpanFormer
  - [ ] RoMa
  - [ ] DUSt3R
  - [ ] MASt3R
