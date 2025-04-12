@@ -34,7 +34,7 @@
  - [x] LoFTR
  - [x] ASpanFormer
  - [x] ELoFTR
- - [ ] RoMa
+ - [ ] RoMa (Stuck)
  - [ ] DUSt3R
  - [ ] MASt3R
 
