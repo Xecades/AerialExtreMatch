@@ -1,0 +1,7 @@
+default: &default
+  class: "DeDoDe"
+  num_keypoints: 4096
+  match_threshold: 0.0
+example:
+  <<: *default
+  imsize: -1

@@ -5,6 +5,7 @@ from .modules.sp_lightglue import SP_LightGlue
 from .modules.disk_lightglue import DISK_LightGlue
 from .modules.sift_lightglue import SIFT_LightGlue
 from .modules.aliked_lightglue import ALIKED_LightGlue
+from .modules.dedode import DeDoDe
 # from .modules.d2net import D2Net
 # from .modules.r2d2 import R2D2
 # from .modules.patch2pix import Patch2Pix, NCNet, Patch2PixRefined

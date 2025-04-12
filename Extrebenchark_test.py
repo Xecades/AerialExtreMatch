@@ -1,19 +1,20 @@
-import immatch.utils
-from immatch.utils.geometry import warp_kpts
-import cv2
 import immatch
 import yaml
 from tqdm import tqdm
 from torch.utils.data import DataLoader
 import torch
 import numpy as np
+from immatch.utils.geometry import warp_kpts
 from immatch.datasets.extredataset import ExtreDataBuilder
-import os
-os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
+
+if __name__ == '__main__':
+    import os
+    os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
+    import cv2
 
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-model_name = "aliked_lightglue"
+model_name = "dedode"
 
 # Initialize model
 with open(f'configs/{model_name}.yml', 'r') as f:
@@ -67,7 +68,7 @@ for one_test in tqdm(ExtreData_test):
         pck_1 = (gd < 1.0).float().mean().nan_to_num()
         pck_3 = (gd < 3.0).float().mean().nan_to_num()
         pck_5 = (gd < 5.0).float().mean().nan_to_num()
-        
+
         pck_1_tot, pck_3_tot, pck_5_tot = (
             pck_1_tot + pck_1,
             pck_3_tot + pck_3,

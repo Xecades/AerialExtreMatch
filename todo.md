@@ -1,3 +1,7 @@
+## Note
+
+ - DeDoDe 在 load image 的时候没有做 normalize，因为 normalize 会导致匹配效果变差 
+
 ## task
 
 1. image-matching-toolbox，rubik有的都要有，除了vggt，按照之前dataset的格式
