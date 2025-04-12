@@ -40,3 +40,6 @@
 [submodule "third_party/xfeat"]
 	path = third_party/xfeat
 	url = git@github.com:verlab/accelerated_features.git
+[submodule "third_party/eloftr"]
+	path = third_party/eloftr
+	url = git@github.com:zju3dv/EfficientLoFTR.git

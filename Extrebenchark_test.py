@@ -14,7 +14,7 @@ if __name__ == '__main__':
 
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-model_name = "aspanformer"
+model_name = "eloftr"
 
 # Initialize model
 with open(f'configs/{model_name}.yml', 'r') as f:

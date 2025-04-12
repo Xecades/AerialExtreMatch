@@ -1,6 +1,7 @@
 ## Note
 
- - 默认 load image 的时候没有做 normalize，因为 normalize 会导致匹配效果变差 
+ - 默认 load image 的时候没有做 normalize，因为 normalize 会导致匹配效果变差
+ - 使用 ELoFTR full
 
 ## task
 
@@ -32,7 +33,7 @@
 
  - [x] LoFTR
  - [x] ASpanFormer
- - [ ] ELoFTR
+ - [x] ELoFTR
  - [ ] RoMa
  - [ ] DUSt3R
  - [ ] MASt3R
