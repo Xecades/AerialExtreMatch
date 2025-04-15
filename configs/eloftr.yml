@@ -13,9 +13,9 @@ example:
 #     <<: *default
 #     imsize: 480
 #     no_match_upscale: True
-# megadepth:
-#     <<: *default
-#     imsize: 1024
+megadepth:
+    <<: *default
+    imsize: 1024
 # inloc:
 #     <<: *default
 #     match_threshold: 0.5

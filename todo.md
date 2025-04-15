@@ -31,9 +31,9 @@
 
 ## Detector-free
 
- - [x] LoFTR
- - [x] ASpanFormer
- - [x] ELoFTR
+ - [x] LoFTR - Verified
+ - [x] ASpanFormer - Verified
+ - [x] ELoFTR - Verified
  - [ ] RoMa (Stuck)
  - [ ] DUSt3R
  - [ ] MASt3R

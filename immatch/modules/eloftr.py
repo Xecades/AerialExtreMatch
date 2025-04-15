@@ -37,7 +37,7 @@ class ELoFTR(Matching):
 
     def load_im(self, im_path):
         return load_gray_scale_tensor_cv(
-            im_path, self.device, imsize=self.imsize, dfactor=8
+            im_path, self.device, imsize=self.imsize, dfactor=32
         )
 
     def match_inputs_(self, gray1, gray2):

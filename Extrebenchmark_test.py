@@ -7,27 +7,27 @@ import numpy as np
 from immatch.utils.geometry import warp_kpts
 from immatch.datasets.extredataset import ExtreDataBuilder
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import os
     os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
     import cv2
 
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = "cuda" if torch.cuda.is_available() else "cpu"
 # device = "cpu"
-model_name = "roma"
+model_name = "eloftr"
 
 # Initialize model
-with open(f'configs/{model_name}.yml', 'r') as f:
-    args = yaml.load(f, Loader=yaml.FullLoader)['example']
-model = immatch.__dict__[args['class']](args)
+with open(f"configs/{model_name}.yml", "r") as f:
+    args = yaml.load(f, Loader=yaml.FullLoader)["example"]
+model = immatch.__dict__[args["class"]](args)
 def matcher(im1, im2): return model.match_pairs(im1, im2)
 
 
 # 数据加载
 ExtreData = ExtreDataBuilder(data_root="./benchmark/class_0")
-name = 'class_0'
-save_path = name + '_' + model_name + '.txt'
+name = "class_0"
+save_path = "temp/extre/" + name + "_" + model_name + ".txt"
 ExtreData_test = ExtreData.build_scenes()
 
 for one_test in tqdm(ExtreData_test):
@@ -38,16 +38,16 @@ for one_test in tqdm(ExtreData_test):
     pck_5_tot = 0.0
 
     for batch_idx, batch in enumerate(val_loader):
-        im1, im2 = batch['im_A_path'][0], batch['im_B_path'][0]
-        depth_ref1, depth_ref2 = batch['depth_A_path'][0], batch['depth_B_path'][0]
+        im1, im2 = batch["im_A_path"][0], batch["im_B_path"][0]
+        depth_ref1, depth_ref2 = batch["depth_A_path"][0], batch["depth_B_path"][0]
         depth1 = cv2.imread(depth_ref1, cv2.IMREAD_UNCHANGED)
         depth1 = torch.tensor(depth1[:, :, 0])[None, ...].to(device)
         depth2 = cv2.imread(depth_ref2, cv2.IMREAD_UNCHANGED)
         depth2 = torch.tensor(depth2[:, :, 0])[None, ...].to(device)
 
-        K1 = batch['K1'].to(device)
-        K2 = batch['K2'].to(device)
-        T_1to2 = batch['T_1to2'].to(device)
+        K1 = batch["K1"].to(device)
+        K2 = batch["K2"].to(device)
+        T_1to2 = batch["T_1to2"].to(device)
 
         matches, _, _, _ = matcher(im1, im2)
         # immatch.utils.plot_matches(im1, im2, matches, radius=2, lines=True, sav_fig=f"matches{batch_idx}.png")
@@ -82,8 +82,8 @@ result = {
     "pck_5": pck_5_tot.item() / len(val_loader),
 }
 
-with open(save_path, 'w') as f_w:
+with open(save_path, "w") as f_w:
     for key in result.keys():
-        info = key + ' ' + str(result[key]) + '\n'
+        info = key + " " + str(result[key]) + "\n"
         f_w.write(info)
 f_w.close()

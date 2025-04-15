@@ -140,8 +140,7 @@ pretrained/
 third_party/
 docs/
 
-class_*.txt
-matches_*.png
+temp/
 test.py
 *.tmp.*
 *.bak.*
