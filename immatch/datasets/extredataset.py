@@ -43,6 +43,8 @@ class ExtreData:
             "K1": K1,
             "K2": K2,
             "T_1to2": T_1to2,
+            "query_pose": T1,
+            "reference_pose": T2,
             "im_A_path": im_A_ref,
             "im_B_path": im_B_ref,
             "depth_A_path":depth_A_ref,

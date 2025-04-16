@@ -10,6 +10,7 @@ from immatch.utils.data_io import load_im_tensor
 class RoMa(Matching):
     def __init__(self, args):
         super().__init__()
+        # raise NotImplementedError("RoMa还有问题，得到的kpts超过了图像范围，可能需要过滤一下？")
 
         self.model = roma_outdoor(self.device)
         self.name = f"RoMa"
