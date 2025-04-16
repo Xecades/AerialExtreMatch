@@ -10,7 +10,6 @@ from immatch.utils.data_io import load_im_tensor
 class RoMa(Matching):
     def __init__(self, args):
         super().__init__()
-        raise NotImplementedError("RoMa还有问题，得到的kpts超过了图像范围，可能需要过滤一下？")
 
         self.model = roma_outdoor(self.device)
         self.name = f"RoMa"
@@ -28,24 +27,21 @@ class RoMa(Matching):
         W1, H1 = Image.open(im1_path).size
         W2, H2 = Image.open(im2_path).size
 
-        warp, certainty = self.model.match(
+        matches, certainty = self.model.match(
             im1_path,
             im2_path,
             device=self.device
         )
 
-        matches, certainty = self.model.sample(warp, certainty, num=2048)
+        matches, certainty = self.model.sample(matches, certainty, num=5000)
         kpts1, kpts2 = self.model.to_pixel_coordinates(matches, H1, W1, H2, W2)
 
-        # kpts1 = torch.cla
-        q = kpts1.round().long()
-        print(q.shape)
-        print(W1, H1, W2, H2)
-        print(torch.max(q), torch.min(q))
+        kpts1[:, 0] = torch.clamp(kpts1[:, 0], 0, W1 - 1)
+        kpts1[:, 1] = torch.clamp(kpts1[:, 1], 0, H1 - 1)
+        kpts2[:, 0] = torch.clamp(kpts2[:, 0], 0, W2 - 1)
+        kpts2[:, 1] = torch.clamp(kpts2[:, 1], 0, H2 - 1)
+        matches = torch.cat((kpts1, kpts2), dim=1)
 
-        kpts1 = kpts1.cpu().numpy()
-        kpts2 = kpts2.cpu().numpy()
-        certainty = certainty.cpu().numpy()
-        matches = np.concatenate((kpts1, kpts2), axis=1)
+        matches = matches.cpu().numpy()
 
-        return matches, kpts1, kpts2, certainty
+        return matches, None, None, None

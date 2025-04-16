@@ -34,7 +34,7 @@
  - [x] LoFTR - Verified
  - [x] ASpanFormer - Verified
  - [x] ELoFTR - Verified
- - [ ] RoMa (Stuck)
+ - [x] RoMa
  - [ ] DUSt3R
  - [ ] MASt3R
 
