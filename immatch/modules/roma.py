@@ -20,14 +20,6 @@ class RoMa(Matching):
         self.name = f"RoMa"
         print(f"Initialize {self.name}")
 
-    # def load_im(self, im_path):
-    #     return load_im_tensor(
-    #         im_path=im_path,
-    #         device=self.device,
-    #         imsize=self.imsize,
-    #         normalize=False,
-    #     )
-
     def match_pairs(self, im1_path, im2_path):
         W1, H1 = Image.open(im1_path).size
         W2, H2 = Image.open(im2_path).size
@@ -38,7 +30,6 @@ class RoMa(Matching):
             device=self.device
         )
 
-<<<<<<< HEAD
         matches, certainty = self.model.sample(matches, certainty, num=5000)
         kpts1, kpts2 = self.model.to_pixel_coordinates(matches, H1, W1, H2, W2)
 
@@ -49,14 +40,5 @@ class RoMa(Matching):
         matches = torch.cat((kpts1, kpts2), dim=1)
 
         matches = matches.cpu().numpy()
-=======
-        matches, certainty = self.model.sample(warp, certainty)
-        kpts1, kpts2 = self.model.to_pixel_coordinates(matches, H1, W1, H2, W2)
-
-        kpts1 = kpts1.cpu().numpy()
-        kpts2 = kpts2.cpu().numpy()
-        certainty = certainty.cpu().numpy()
-        matches = np.concatenate((kpts1, kpts2), axis=1)
->>>>>>> 1efaf46 (mast3r,dust3r,vggt:added new models)
 
         return matches, None, None, None
