@@ -17,10 +17,14 @@ if __name__ == "__main__":
 device = "cuda" if torch.cuda.is_available() else "cpu"
 # device = "cpu"
 <<<<<<< HEAD:Extrebenchmark_test.py
+<<<<<<< HEAD:Extrebenchmark_test.py
 model_name = "eloftr"
 =======
 model_name = "sp_lightglue"
 >>>>>>> f51db74 (add localization_metric):Extrebenchark_test.py
+=======
+model_name = "vggt"
+>>>>>>> 1efaf46 (mast3r,dust3r,vggt:added new models):Extrebenchark_test.py
 
 # Initialize model
 with open(f"configs/{model_name}.yml", "r") as f:
@@ -133,7 +137,7 @@ for i in tqdm(range(32)):
                     gt_pose=query_pose.squeeze(0),
                 )
             
-            f_loc.write(str(batch_idx) + ' ' + str(error_t) + ' ' + str(error_r) + '\n')
+                f_loc.write(str(batch_idx) + ' ' + str(error_t) + ' ' + str(error_r) + '\n')
             
 
 <<<<<<< HEAD:Extrebenchmark_test.py

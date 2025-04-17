@@ -39,21 +39,21 @@ class QueryLocalizer:
         i = pos[:, 0]
         j = pos[:, 1]
 
-        # Valid corners, check whether it is out of range
-        i_top_left = torch.floor(i).long()
-        j_top_left = torch.floor(j).long()
+        i_top_left = torch.clamp(torch.floor(i).long(), 0, h - 1)
+        j_top_left = torch.clamp(torch.floor(j).long(), 0, w - 1)
+
+        i_top_right = torch.clamp(torch.floor(i).long(), 0, h - 1)
+        j_top_right = torch.clamp(torch.ceil(j).long(), 0, w - 1)
+
+        i_bottom_left = torch.clamp(torch.ceil(i).long(), 0, h - 1)
+        j_bottom_left = torch.clamp(torch.floor(j).long(), 0, w - 1)
+
+        i_bottom_right = torch.clamp(torch.ceil(i).long(), 0, h - 1)
+        j_bottom_right = torch.clamp(torch.ceil(j).long(), 0, w - 1)
+        
         valid_top_left = torch.min(i_top_left >= 0, j_top_left >= 0)
-
-        i_top_right = torch.floor(i).long()
-        j_top_right = torch.ceil(j).long()
         valid_top_right = torch.min(i_top_right >= 0, j_top_right < w)
-
-        i_bottom_left = torch.ceil(i).long()
-        j_bottom_left = torch.floor(j).long()
         valid_bottom_left = torch.min(i_bottom_left < h, j_bottom_left >= 0)
-
-        i_bottom_right = torch.ceil(i).long()
-        j_bottom_right = torch.ceil(j).long()
         valid_bottom_right = torch.min(i_bottom_right < h, j_bottom_right < w)
 
         valid_corners = torch.min(
@@ -220,6 +220,9 @@ class QueryLocalizer:
         return pred_matrix
     
     def eval(self, pred_matrix, gt_pose):
+
+        if pred_matrix is None:
+            return np.nan, 180.0
         
         gt_pose = gt_pose.inverse().cpu().numpy()
         gt_t = gt_pose[:3, 3]

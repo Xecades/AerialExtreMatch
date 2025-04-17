@@ -19,8 +19,11 @@ def warp_kpts(kpts0, depth0, depth1, T_0to1, K0, K1):
         warped_keypoints0 (torch.Tensor): [N, L, 2] <x0_hat, y1_hat>
     """
     kpts0_long = kpts0.round().long()
-
-    # Sample depth, get calculable_mask on depth != 0
+    height, width = depth0.shape[-2], depth0.shape[-1]
+    # 确保索引值在合法范围内
+    kpts0_long[..., 0] = torch.clamp(kpts0_long[..., 0], 0, width - 1)  # X 坐标
+    kpts0_long[..., 1] = torch.clamp(kpts0_long[..., 1], 0, height - 1)  # Y 坐标
+        # Sample depth, get calculable_mask on depth != 0
     kpts0_depth = torch.stack(
         [depth0[i, kpts0_long[i, :, 1], kpts0_long[i, :, 0]] for i in range(kpts0.shape[0])], dim=0
     )  # (N, L)

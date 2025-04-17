@@ -1,0 +1,5 @@
+default: &default
+  class: "Dust3rMatcher"
+  imsize: 512
+example:
+  <<: *default

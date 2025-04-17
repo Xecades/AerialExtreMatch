@@ -1,0 +1,5 @@
+default: &default
+  class: "VGGTMatcher"
+  imsize: 518
+example:
+  <<: *default

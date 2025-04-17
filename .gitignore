@@ -144,3 +144,5 @@ temp/
 test.py
 *.tmp.*
 *.bak.*
+
+*.png
