@@ -4,16 +4,6 @@ import torch
 from romatch.models.matcher import *
 from romatch.models.transformer import Block, TransformerDecoder, MemEffAttention
 from romatch.models.encoders import *
-from romatch.models.tiny import TinyRoMa
-
-def tiny_roma_v1_model(weights = None, freeze_xfeat=False, exact_softmax=False, xfeat = None):
-    model = TinyRoMa(
-        xfeat = xfeat,
-        freeze_xfeat=freeze_xfeat, 
-        exact_softmax=exact_softmax)
-    if weights is not None:
-        model.load_state_dict(weights)
-    return model
 
 def roma_model(resolution, upsample_preds, device = None, weights=None, dinov2_weights=None, amp_dtype: torch.dtype=torch.float16, **kwargs):
     # romatch weights and dinov2 weights are loaded seperately, as dinov2 weights are not parameters
