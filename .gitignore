@@ -9,3 +9,6 @@ jobs/*
 *ignore_me*
 *.pth
 wandb*
+
+*.tmp.*
+*.local.*
