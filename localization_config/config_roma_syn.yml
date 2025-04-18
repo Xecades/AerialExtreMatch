@@ -1,7 +1,7 @@
 data_path: "data/query/syn"
 yaw_flag: true
 method: "roma"
-
+dataname: "syn"
 
 query:
   query_path: "data/query/syn"

@@ -9,6 +9,7 @@ import immatch
 from immatch.utils.crop4map import generate_ref_map
 from immatch.utils.transform import *
 from immatch.utils.visualize import plot_match
+from immatch.utils.util import aggregate_stats
 from immatch.localize.dom_localize import DOMLocalizer
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -23,6 +24,7 @@ config = load_config(config_path)
 
 # setting initialization
 data_path = config["data_path"]
+dataset = config["dataname"]
 # 是否使用yaw角先验
 yaw_flag = config["yaw_flag"]
 # query
@@ -62,37 +64,46 @@ query_intrinsic = parse_intrinsic_list(query_intrinsic_path)
 query_osg = parse_pose_osg(query_prior_path)
 data = generate_ref_map(query_intrinsic, query_pose, ref_DSM_path, ref_DOM_path, ref_npy_path, ref_save)
 # 
-for qname in tqdm(data.keys()):
-    imgr_path = os.path.join(ref_save, 'rgb', data[qname]['imgr_name'] + '.jpg')
-    exr_path = os.path.join(ref_save, 'npy', data[qname]['exr_name'] + '.npy')
-    q_intrinsic = query_intrinsic[qname]
-    ori_path = os.path.join(query_img_path, qname+'.jpg')
-    rot_R = None
-    if yaw_flag:
-        yaw = query_osg[qname][0][2]
-        rgb_img = cv2.imread(ori_path)
-        rot_img, rot_R = rotate_image(rgb_img, yaw)
-        rot_img_save_path = os.path.join(query_rot_img_path, qname+'.jpg')
-        cv2.imwrite(rot_img_save_path, rot_img)
-        mathes, _, _, _ = matcher(rot_img_save_path, imgr_path)
-        plot_match(ori_path, rot_img_save_path, imgr_path, mathes, matching_path, qname, rot_R)
-    else:
-        mathes, _, _, _ = matcher(ori_path, imgr_path)
-    
-    
-    if len(mathes) <= 4:
-        continue
+poses_errors = []
+angle_errors = []
 
-    domlocalizer = DOMLocalizer(
-        K1=q_intrinsic,
-        points_path=exr_path,
-        matches=mathes
-    )
-    pred_matrix = domlocalizer.main_localize(ori_path, query_pose[qname], rot_R)
-    # eval
-    error_t, error_r = domlocalizer.eval(
-                    pred_matrix=pred_matrix,
-                    gt_pose=query_pose[qname],
-                )
+with open(result_txt, 'w') as f_result:
+    for qname in tqdm(data.keys()):
+        imgr_path = os.path.join(ref_save, 'rgb', data[qname]['imgr_name'] + '.jpg')
+        exr_path = os.path.join(ref_save, 'npy', data[qname]['exr_name'] + '.npy')
+        q_intrinsic = query_intrinsic[qname]
+        ori_path = os.path.join(query_img_path, qname+'.jpg')
+        rot_R = None
+        if yaw_flag:
+            yaw = query_osg[qname][0][2]
+            rgb_img = cv2.imread(ori_path)
+            rot_img, rot_R = rotate_image(rgb_img, yaw)
+            rot_img_save_path = os.path.join(query_rot_img_path, qname+'.jpg')
+            cv2.imwrite(rot_img_save_path, rot_img)
+            mathes, _, _, _ = matcher(rot_img_save_path, imgr_path)
+            plot_match(ori_path, rot_img_save_path, imgr_path, mathes, matching_path, qname, rot_R)
+        else:
+            mathes, _, _, _ = matcher(ori_path, imgr_path)
+        
+        
+        if len(mathes) <= 4:
+            continue
 
-    print(error_r, error_t)
+        domlocalizer = DOMLocalizer(
+            K1=q_intrinsic,
+            points_path=exr_path,
+            matches=mathes
+        )
+        pred_matrix = domlocalizer.main_localize(ori_path, query_pose[qname], rot_R)
+        # eval
+        error_t, error_r = domlocalizer.eval(
+                        pred_matrix=pred_matrix,
+                        gt_pose=query_pose[qname],
+                    )
+        f_result.write(str(qname) + ' ' + str(error_t) + ' ' + str(error_r) + '\n')
+        poses_errors.append(error_t)
+        angle_errors.append(error_r)
+
+out_string = aggregate_stats(f'{dataset}', poses_errors, angle_errors)
+print(out_string)
+f_result.write(out_string)

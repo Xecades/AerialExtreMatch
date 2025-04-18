@@ -6,6 +6,7 @@ import torchvision.transforms as tfm
 import os, contextlib
 from yacs.config import CfgNode as CN
 import sys
+import collections
 
 logger = logging.getLogger()
 logger.setLevel(31)  # Avoid printing useless low-level logs
@@ -204,3 +205,18 @@ def get_default_device():
         device = "cuda"
 
     return device
+
+def aggregate_stats(info_str, pose_errors, angular_errors):
+    stats = collections.Counter()
+    median_pos_error = np.median(pose_errors)
+    median_angular_error = np.median(angular_errors)
+    out_str = f'{info_str}: {len(pose_errors)} images - {median_pos_error=}, {median_angular_error=}'
+
+    for trl_thr, ang_thr in [(5, 1), (10, 1), (20, 2), (50, 5), (100, 10)]:
+        for pose_error, angular_error in zip(pose_errors, angular_errors):
+            correct_for_this_threshold = (pose_error < trl_thr) and (angular_error < ang_thr)
+            stats[trl_thr, ang_thr] += correct_for_this_threshold
+    stats = {f'acc@{key[0]:g}m,{key[1]}deg': 100 * val / len(pose_errors) for key, val in stats.items()}
+    for metric, perf in stats.items():
+        out_str += f'  - {metric:12s}={float(perf):.3f}'
+    return out_str
