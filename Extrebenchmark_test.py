@@ -16,15 +16,8 @@ if __name__ == "__main__":
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 # device = "cpu"
-<<<<<<< HEAD:Extrebenchmark_test.py
-<<<<<<< HEAD:Extrebenchmark_test.py
-model_name = "eloftr"
-=======
 model_name = "sp_lightglue"
->>>>>>> f51db74 (add localization_metric):Extrebenchark_test.py
-=======
-model_name = "vggt"
->>>>>>> 1efaf46 (mast3r,dust3r,vggt:added new models):Extrebenchark_test.py
+
 
 # Initialize model
 with open(f"configs/{model_name}.yml", "r") as f:
@@ -44,19 +37,12 @@ if not os.path.exists(loc_path):
 
 
 # 数据加载
-<<<<<<< HEAD:Extrebenchmark_test.py
-ExtreData = ExtreDataBuilder(data_root="./benchmark/class_0")
-name = "class_0"
-save_path = "temp/extre/" + name + "_" + model_name + ".txt"
-ExtreData_test = ExtreData.build_scenes()
-=======
 for i in tqdm(range(32)):
     ExtreData = ExtreDataBuilder(data_root=f"/media/guan/ZX1/ExeBenchmark/Benchmark/class_{i}/")
     name = f'class_{i}'
     save_path = pck_path + name + '_' + model_name + '.txt'
     loc_txt_path = loc_path + name + '_' + model_name + '.txt'
     ExtreData_test = ExtreData.build_scenes()
->>>>>>> f51db74 (add localization_metric):Extrebenchark_test.py
 
     for one_test in ExtreData_test:
         val_loader = DataLoader(one_test, num_workers=0,
@@ -65,19 +51,6 @@ for i in tqdm(range(32)):
         pck_3_tot = 0.0
         pck_5_tot = 0.0
 
-<<<<<<< HEAD:Extrebenchmark_test.py
-    for batch_idx, batch in enumerate(val_loader):
-        im1, im2 = batch["im_A_path"][0], batch["im_B_path"][0]
-        depth_ref1, depth_ref2 = batch["depth_A_path"][0], batch["depth_B_path"][0]
-        depth1 = cv2.imread(depth_ref1, cv2.IMREAD_UNCHANGED)
-        depth1 = torch.tensor(depth1[:, :, 0])[None, ...].to(device)
-        depth2 = cv2.imread(depth_ref2, cv2.IMREAD_UNCHANGED)
-        depth2 = torch.tensor(depth2[:, :, 0])[None, ...].to(device)
-
-        K1 = batch["K1"].to(device)
-        K2 = batch["K2"].to(device)
-        T_1to2 = batch["T_1to2"].to(device)
-=======
         with open(loc_txt_path, 'w') as f_loc:
             for batch_idx, batch in tqdm(enumerate(val_loader), total=len(val_loader)):
                 im1, im2 = batch['im_A_path'][0], batch['im_B_path'][0]
@@ -93,9 +66,14 @@ for i in tqdm(range(32)):
                 # w2c 4*4
                 query_pose = batch['query_pose'].to(device)
                 reference_pose = batch['reference_pose'].to(device)
->>>>>>> f51db74 (add localization_metric):Extrebenchark_test.py
 
                 matches, _, _, _ = matcher(im1, im2)
+                if len(matches) == 0:
+                    pck_1 = 0.0
+                    pck_3 = 0.0
+                    pck_5 = 0.0
+                    f_loc.write(str(batch_idx) + ' ' + str(np.nan) + ' ' + str(180.0) + '\n')
+                    continue
                 # immatch.utils.plot_matches(im1, im2, matches, radius=2, lines=False, sav_fig=f"matches{batch_idx}.png")
                 matches_1to2 = torch.tensor(np.column_stack(
                     (matches[:, 0], matches[:, 1])).reshape(1, -1, 2)).to(device)
@@ -140,13 +118,6 @@ for i in tqdm(range(32)):
                 f_loc.write(str(batch_idx) + ' ' + str(error_t) + ' ' + str(error_r) + '\n')
             
 
-<<<<<<< HEAD:Extrebenchmark_test.py
-with open(save_path, "w") as f_w:
-    for key in result.keys():
-        info = key + " " + str(result[key]) + "\n"
-        f_w.write(info)
-f_w.close()
-=======
     result = {
         "pck_1": pck_1_tot.item() / len(val_loader),
         "pck_3": pck_3_tot.item() / len(val_loader),
@@ -159,4 +130,3 @@ f_w.close()
             f_w.write(info)
     f_w.close()
     f_loc.close()
->>>>>>> f51db74 (add localization_metric):Extrebenchark_test.py

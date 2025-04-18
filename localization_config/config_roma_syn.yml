@@ -1,0 +1,22 @@
+data_path: "data/query/syn"
+yaw_flag: true
+method: "roma"
+
+
+query:
+  query_path: "data/query/syn"
+  query_img_path: "data/query/syn/query_img/"
+  query_prior_path: "data/query/syn/pose.txt"
+  query_intrinsic_path: "data/query/syn/intrinsic.txt"
+  query_gt_path: "data/query/syn/pose.txt"
+  query_rot_img_path: "data/query/syn/rot_img"
+  ref_save: "data/query/syn/reference"
+
+ref:
+  ref_DSM_path: "/media/guan/data/sparse/ExtreBenchmark/data/ref/Production_4_DSM_merge.tif"
+  ref_DOM_path: "/media/guan/data/sparse/ExtreBenchmark/data/ref/Production_4_ortho_merge.tif"
+  ref_npy_path: "/media/guan/data/sparse/ExtreBenchmark/data/ref/world_point.npy"
+
+result:
+  matching_path_name: "roma"
+  result_txt: "roma_yaw.txt"
