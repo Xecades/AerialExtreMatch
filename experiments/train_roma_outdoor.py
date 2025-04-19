@@ -3,15 +3,17 @@ import torch
 from argparse import ArgumentParser
 
 from torch import nn
-from torch.utils.data import ConcatDataset, default_collate
+from torch.utils.data import ConcatDataset
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
+from functools import partial
 import json
 import romatch.utils.writer as writ
 
 from romatch.benchmarks import MegadepthDenseBenchmark
 from romatch.datasets.megadepth import MegadepthBuilder
 from romatch.losses.robust_loss import RobustLosses
+from romatch.utils.collate import collate_fn_replace_corrupted
 # from romatch.benchmarks import MegaDepthPoseEstimationBenchmark, MegadepthDenseBenchmark, HpatchesHomogBenchmark
 
 from romatch.train.train import train_k_steps
@@ -184,12 +186,6 @@ def get_model(pretrained_backbone=True, resolution="medium", **kwargs):
     return matcher
 
 
-def collate_fn(batch):
-    # skip None items
-    batch = [b for b in batch if b is not None]
-    return default_collate(batch)
-
-
 def train(args):
     dist.init_process_group('nccl')
     # torch._dynamo.config.verbose=True
@@ -256,6 +252,11 @@ def train(args):
     )
     megadepth_train = ConcatDataset(megadepth_train1 + megadepth_train2)
     mega_ws = mega.weight_scenes(megadepth_train, alpha=0.75)
+    collate_fn = partial(
+        collate_fn_replace_corrupted,
+        dataset=megadepth_train
+    )
+
     # Loss and optimizer
     depth_loss = RobustLosses(
         ce_weight=0.01,

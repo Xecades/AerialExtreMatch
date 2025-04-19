@@ -4,6 +4,8 @@ import tqdm
 from romatch.datasets import MegadepthBuilder
 from romatch.utils import warp_kpts
 from torch.utils.data import ConcatDataset
+from romatch.utils.collate import collate_fn_replace_corrupted
+from functools import partial
 import romatch
 
 class MegadepthDenseBenchmark:
@@ -52,8 +54,9 @@ class MegadepthDenseBenchmark:
                 torch.ones(len(self.dataset)), replacement=False, num_samples=self.num_samples
             )
             B = batch_size
+            collate_fn = partial(collate_fn_replace_corrupted, dataset=self.dataset)
             dataloader = torch.utils.data.DataLoader(
-                self.dataset, batch_size=B, num_workers=batch_size, sampler=sampler
+                self.dataset, batch_size=B, num_workers=batch_size, sampler=sampler, collate_fn=collate_fn
             )
             for idx, data in tqdm.tqdm(enumerate(dataloader), disable = romatch.RANK > 0):
                 im_A, im_B, depth1, depth2, T_1to2, K1, K2 = (

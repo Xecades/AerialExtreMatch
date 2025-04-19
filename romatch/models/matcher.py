@@ -626,7 +626,7 @@ class RegressionMatcher(nn.Module):
             check_not_i16(im_A)
             im_A = im_A.convert("RGB")
         else:
-            check_rgb(im_A_input)
+            # check_rgb(im_A_input)
             im_A = im_A_input
 
         if isinstance(im_B_input, (str, os.PathLike)):
@@ -634,7 +634,7 @@ class RegressionMatcher(nn.Module):
             check_not_i16(im_B)
             im_B = im_B.convert("RGB")
         else:
-            check_rgb(im_B_input)
+            # check_rgb(im_B_input)
             im_B = im_B_input
 
         symmetric = self.symmetric
