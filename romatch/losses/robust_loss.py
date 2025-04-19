@@ -58,8 +58,8 @@ class RobustLosses(nn.Module):
             f"gm_cls_loss_{scale}": cls_loss.mean(),
         }
         # wandb.log(losses, step = romatch.GLOBAL_STEP)
-        writ.writer.add_scalar(f"gm_certainty_loss_{scale}", certainty_loss.mean(), romatch.GLOBAL_STEP)
-        writ.writer.add_scalar(f"gm_cls_loss_{scale}", cls_loss.mean(), romatch.GLOBAL_STEP)
+        writ.writer.add_scalar(f"gm_certainty_loss/{scale}", certainty_loss.mean(), romatch.GLOBAL_STEP)
+        writ.writer.add_scalar(f"gm_cls_loss/{scale}", cls_loss.mean(), romatch.GLOBAL_STEP)
         return losses
 
     def delta_cls_loss(self, x2, prob, flow_pre_delta, delta_cls, certainty, scale, offset_scale):
@@ -79,8 +79,8 @@ class RobustLosses(nn.Module):
             f"delta_cls_loss_{scale}": cls_loss.mean(),
         }
         # wandb.log(losses, step = romatch.GLOBAL_STEP)
-        writ.writer.add_scalar(f"delta_certainty_loss_{scale}", certainty_loss.mean(), romatch.GLOBAL_STEP)
-        writ.writer.add_scalar(f"delta_cls_loss_{scale}", cls_loss.mean(), romatch.GLOBAL_STEP)
+        writ.writer.add_scalar(f"delta_certainty_loss/{scale}", certainty_loss.mean(), romatch.GLOBAL_STEP)
+        writ.writer.add_scalar(f"delta_cls_loss/{scale}", cls_loss.mean(), romatch.GLOBAL_STEP)
         return losses
 
     def regression_loss(self, x2, prob, flow, certainty, scale, eps=1e-8, mode = "delta"):
@@ -102,8 +102,8 @@ class RobustLosses(nn.Module):
             f"{mode}_regression_loss_{scale}": reg_loss.mean(),
         }
         # wandb.log(losses, step = romatch.GLOBAL_STEP)
-        writ.writer.add_scalar(f"{mode}_certainty_loss_{scale}", ce_loss.mean(), romatch.GLOBAL_STEP)
-        writ.writer.add_scalar(f"{mode}_regression_loss_{scale}", reg_loss.mean(), romatch.GLOBAL_STEP)
+        writ.writer.add_scalar(f"{mode}_certainty_loss/{scale}", ce_loss.mean(), romatch.GLOBAL_STEP)
+        writ.writer.add_scalar(f"{mode}_regression_loss/{scale}", reg_loss.mean(), romatch.GLOBAL_STEP)
         return losses
 
     def forward(self, corresps, batch):

@@ -66,7 +66,7 @@ def train_k_steps(
             lr_scheduler.step()
         # [wandb.log({f"lr_group_{grp}": lr}) for grp, lr in enumerate(lr_scheduler.get_last_lr())]
         for grp, lr in enumerate(lr_scheduler.get_last_lr()):
-            writ.writer.add_scalar(f"lr_group_{grp}", lr, romatch.GLOBAL_STEP)
+            writ.writer.add_scalar(f"lr/group_{grp}", lr, romatch.GLOBAL_STEP)
 
 
 def train_epoch(

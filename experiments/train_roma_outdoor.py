@@ -3,16 +3,16 @@ import torch
 from argparse import ArgumentParser
 
 from torch import nn
-from torch.utils.data import ConcatDataset
+from torch.utils.data import ConcatDataset, default_collate
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
 import json
-import wandb
+import romatch.utils.writer as writ
 
 from romatch.benchmarks import MegadepthDenseBenchmark
 from romatch.datasets.megadepth import MegadepthBuilder
 from romatch.losses.robust_loss import RobustLosses
-from romatch.benchmarks import MegaDepthPoseEstimationBenchmark, MegadepthDenseBenchmark, HpatchesHomogBenchmark
+# from romatch.benchmarks import MegaDepthPoseEstimationBenchmark, MegadepthDenseBenchmark, HpatchesHomogBenchmark
 
 from romatch.train.train import train_k_steps
 from romatch.models.matcher import *
@@ -166,6 +166,13 @@ def get_model(pretrained_backbone=True, resolution = "medium", **kwargs):
     matcher = RegressionMatcher(encoder, decoder, h=h, w=w,**kwargs)
     return matcher
 
+
+def collate_fn(batch):
+    # skip None items
+    batch = [b for b in batch if b is not None]
+    return default_collate(batch)
+
+
 def train(args):
     dist.init_process_group('nccl')
     #torch._dynamo.config.verbose=True
@@ -178,10 +185,13 @@ def train(args):
     torch.cuda.set_device(device_id)
     
     resolution = args.train_resolution
-    wandb_log = not args.dont_log_wandb
+    # wandb_log = not args.dont_log_wandb
     experiment_name = os.path.splitext(os.path.basename(__file__))[0]
-    wandb_mode = "online" if wandb_log and rank == 0 else "disabled"
-    wandb.init(project="romatch", entity=args.wandb_entity, name=experiment_name, reinit=False, mode = wandb_mode)
+    # wandb_mode = "online" if wandb_log and rank == 0 else "disabled"
+    # wandb.init(project="romatch", entity=args.wandb_entity, name=experiment_name, reinit=False, mode = wandb_mode)
+    
+    writ.init_writer(experiment_name, rank)
+    
     checkpoint_dir = "workspace/checkpoints/"
     h,w = resolutions[resolution]
     model = get_model(pretrained_backbone=True, resolution=resolution, attenuate_cert = False).to(device_id)
@@ -242,50 +252,61 @@ def train(args):
                 batch_size = batch_size,
                 sampler = mega_sampler,
                 num_workers = 8,
+                collate_fn=collate_fn
             )
         )
         train_k_steps(
             n, k, mega_dataloader, ddp_model, depth_loss, optimizer, lr_scheduler, grad_scaler, grad_clip_norm = grad_clip_norm,
         )
         checkpointer.save(model, optimizer, lr_scheduler, romatch.GLOBAL_STEP)
-        wandb.log(megadense_benchmark.benchmark(model), step = romatch.GLOBAL_STEP)
+        
+        # wandb.log(megadense_benchmark.benchmark(model), step = romatch.GLOBAL_STEP)
+        if rank == 0:
+            results = megadense_benchmark.benchmark(model)
+            for metric_name, value in results.items():
+                writ.writer.add_scalar(
+                    f'validation/{metric_name}',
+                    value,
+                    romatch.GLOBAL_STEP
+                )
+            writ.writer.flush()
 
-def test_mega_8_scenes(model, name):
-    mega_8_scenes_benchmark = MegaDepthPoseEstimationBenchmark("data/megadepth",
-                                                scene_names=['mega_8_scenes_0019_0.1_0.3.npz',
-                                                    'mega_8_scenes_0025_0.1_0.3.npz',
-                                                    'mega_8_scenes_0021_0.1_0.3.npz',
-                                                    'mega_8_scenes_0008_0.1_0.3.npz',
-                                                    'mega_8_scenes_0032_0.1_0.3.npz',
-                                                    'mega_8_scenes_1589_0.1_0.3.npz',
-                                                    'mega_8_scenes_0063_0.1_0.3.npz',
-                                                    'mega_8_scenes_0024_0.1_0.3.npz',
-                                                    'mega_8_scenes_0019_0.3_0.5.npz',
-                                                    'mega_8_scenes_0025_0.3_0.5.npz',
-                                                    'mega_8_scenes_0021_0.3_0.5.npz',
-                                                    'mega_8_scenes_0008_0.3_0.5.npz',
-                                                    'mega_8_scenes_0032_0.3_0.5.npz',
-                                                    'mega_8_scenes_1589_0.3_0.5.npz',
-                                                    'mega_8_scenes_0063_0.3_0.5.npz',
-                                                    'mega_8_scenes_0024_0.3_0.5.npz'])
-    mega_8_scenes_results = mega_8_scenes_benchmark.benchmark(model, model_name=name)
-    print(mega_8_scenes_results)
-    json.dump(mega_8_scenes_results, open(f"results/mega_8_scenes_{name}.json", "w"))
+# def test_mega_8_scenes(model, name):
+#     mega_8_scenes_benchmark = MegaDepthPoseEstimationBenchmark("data/megadepth",
+#                                                 scene_names=['mega_8_scenes_0019_0.1_0.3.npz',
+#                                                     'mega_8_scenes_0025_0.1_0.3.npz',
+#                                                     'mega_8_scenes_0021_0.1_0.3.npz',
+#                                                     'mega_8_scenes_0008_0.1_0.3.npz',
+#                                                     'mega_8_scenes_0032_0.1_0.3.npz',
+#                                                     'mega_8_scenes_1589_0.1_0.3.npz',
+#                                                     'mega_8_scenes_0063_0.1_0.3.npz',
+#                                                     'mega_8_scenes_0024_0.1_0.3.npz',
+#                                                     'mega_8_scenes_0019_0.3_0.5.npz',
+#                                                     'mega_8_scenes_0025_0.3_0.5.npz',
+#                                                     'mega_8_scenes_0021_0.3_0.5.npz',
+#                                                     'mega_8_scenes_0008_0.3_0.5.npz',
+#                                                     'mega_8_scenes_0032_0.3_0.5.npz',
+#                                                     'mega_8_scenes_1589_0.3_0.5.npz',
+#                                                     'mega_8_scenes_0063_0.3_0.5.npz',
+#                                                     'mega_8_scenes_0024_0.3_0.5.npz'])
+#     mega_8_scenes_results = mega_8_scenes_benchmark.benchmark(model, model_name=name)
+#     print(mega_8_scenes_results)
+#     json.dump(mega_8_scenes_results, open(f"results/mega_8_scenes_{name}.json", "w"))
 
-def test_mega1500(model, name):
-    mega1500_benchmark = MegaDepthPoseEstimationBenchmark("data/megadepth")
-    mega1500_results = mega1500_benchmark.benchmark(model, model_name=name)
-    json.dump(mega1500_results, open(f"results/mega1500_{name}.json", "w"))
+# def test_mega1500(model, name):
+#     mega1500_benchmark = MegaDepthPoseEstimationBenchmark("data/megadepth")
+#     mega1500_results = mega1500_benchmark.benchmark(model, model_name=name)
+#     json.dump(mega1500_results, open(f"results/mega1500_{name}.json", "w"))
 
-def test_mega_dense(model, name):
-    megadense_benchmark = MegadepthDenseBenchmark("data/megadepth", num_samples = 1000)
-    megadense_results = megadense_benchmark.benchmark(model)
-    json.dump(megadense_results, open(f"results/mega_dense_{name}.json", "w"))
+# def test_mega_dense(model, name):
+#     megadense_benchmark = MegadepthDenseBenchmark("data/megadepth", num_samples = 1000)
+#     megadense_results = megadense_benchmark.benchmark(model)
+#     json.dump(megadense_results, open(f"results/mega_dense_{name}.json", "w"))
     
-def test_hpatches(model, name):
-    hpatches_benchmark = HpatchesHomogBenchmark("data/hpatches")
-    hpatches_results = hpatches_benchmark.benchmark(model)
-    json.dump(hpatches_results, open(f"results/hpatches_{name}.json", "w"))
+# def test_hpatches(model, name):
+#     hpatches_benchmark = HpatchesHomogBenchmark("data/hpatches")
+#     hpatches_results = hpatches_benchmark.benchmark(model)
+#     json.dump(hpatches_results, open(f"results/hpatches_{name}.json", "w"))
 
 
 if __name__ == "__main__":

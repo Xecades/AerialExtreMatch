@@ -125,16 +125,22 @@ class MegadepthScene:
         im_B_ref = os.path.join(self.data_root, im_B)
         depth_A_ref = os.path.join(self.data_root, depth1)
         depth_B_ref = os.path.join(self.data_root, depth2)
-        im_A = self.load_im(im_A_ref)
-        im_B = self.load_im(im_B_ref)
+
+        try:
+            im_A = self.load_im(im_A_ref)
+            im_B = self.load_im(im_B_ref)
+            depth_A = self.load_depth(depth_A_ref)
+            depth_B = self.load_depth(depth_B_ref)
+        except Exception as e:
+            print("Error loading image or depth:", e)
+            return None
+
         K1 = self.scale_intrinsic(K1, im_A.width, im_A.height)
         K2 = self.scale_intrinsic(K2, im_B.width, im_B.height)
 
         if self.use_randaug:
             im_A, im_B = self.rand_augment(im_A, im_B)
 
-        depth_A = self.load_depth(depth_A_ref)
-        depth_B = self.load_depth(depth_B_ref)
         # Process images
         im_A, im_B = self.im_transform_ops((im_A, im_B))
         depth_A, depth_B = self.depth_transform_ops(
