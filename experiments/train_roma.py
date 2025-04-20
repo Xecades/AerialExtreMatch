@@ -3,15 +3,14 @@ import torch
 from argparse import ArgumentParser
 
 from torch import nn
-from torch.utils.data import ConcatDataset
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
 from functools import partial
 import json
 import romatch.utils.writer as writ
 
-from romatch.benchmarks import MegadepthDenseBenchmark, HybridVisualizeBenchmark
-from romatch.datasets.megadepth import MegadepthBuilder
+from romatch.benchmarks import MixedDenseBenchmark, MixedVisualizeBenchmark
+from romatch.datasets.mixed import get_mixed_dataset
 from romatch.losses.robust_loss import RobustLosses
 from romatch.utils.collate import collate_fn_replace_corrupted
 # from romatch.benchmarks import MegaDepthPoseEstimationBenchmark, MegadepthDenseBenchmark, HpatchesHomogBenchmark
@@ -216,45 +215,19 @@ def train(args):
     # Num steps
     global_step = 0
     batch_size = args.gpu_batch_size
-    step_size = gpus*batch_size
+    step_size = gpus * batch_size
     romatch.STEP_SIZE = step_size
 
     N = (32 * 250000)  # 250k steps of batch size 32
     # checkpoint every
-    k = 25000 // romatch.STEP_SIZE
+    k = 30000 // romatch.STEP_SIZE
 
     # Data
-    mega = MegadepthBuilder(
-        data_root="data/megadepth",
-        loftr_ignore=True,
-        imc21_ignore=True
-    )
-    use_horizontal_flip_aug = True
-    rot_prob = 0
-    depth_interpolation_mode = "bilinear"
-    megadepth_train1 = mega.build_scenes(
-        split="train_loftr",
-        min_overlap=0.01,
-        shake_t=32,
-        use_horizontal_flip_aug=use_horizontal_flip_aug,
-        rot_prob=rot_prob,
-        ht=h,
-        wt=w,
-    )
-    megadepth_train2 = mega.build_scenes(
-        split="train_loftr",
-        min_overlap=0.35,
-        shake_t=32,
-        use_horizontal_flip_aug=use_horizontal_flip_aug,
-        rot_prob=rot_prob,
-        ht=h,
-        wt=w,
-    )
-    megadepth_train = ConcatDataset(megadepth_train1 + megadepth_train2)
-    mega_ws = mega.weight_scenes(megadepth_train, alpha=0.75)
+    mixed_train, mixed_ws = get_mixed_dataset(
+        h, w, train=True, mega_percent=0.1)
     collate_fn = partial(
         collate_fn_replace_corrupted,
-        dataset=megadepth_train
+        dataset=mixed_train
     )
 
     # Loss and optimizer
@@ -262,7 +235,7 @@ def train(args):
         ce_weight=0.01,
         local_dist={1: 4, 2: 4, 4: 8, 8: 8},
         local_largest_scale=8,
-        depth_interpolation_mode=depth_interpolation_mode,
+        depth_interpolation_mode="bilinear",
         alpha=0.5,
         c=1e-4
     )
@@ -273,44 +246,54 @@ def train(args):
     optimizer = torch.optim.AdamW(parameters, weight_decay=0.01)
     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
         optimizer, milestones=[(9*N/romatch.STEP_SIZE)//10])
-    megadense_benchmark = MegadepthDenseBenchmark(
-        "data/megadepth", num_samples=1000, h=h, w=w)
-    hybrid_visualize_benchmark = HybridVisualizeBenchmark(
-        "data/megadepth", h=h, w=w)
+
+    megadense_benchmark = MixedDenseBenchmark(num_samples=1000, h=h, w=w)
+    mixed_visualize_benchmark = MixedVisualizeBenchmark(
+        num_samples=1000, h=h, w=w)
+
     checkpointer = CheckPoint(checkpoint_dir, experiment_name)
     model, optimizer, lr_scheduler, global_step = checkpointer.load(
         model, optimizer, lr_scheduler, global_step)
     romatch.GLOBAL_STEP = global_step
+
     ddp_model = DDP(
         model,
         device_ids=[device_id],
         find_unused_parameters=False,
         gradient_as_bucket_view=True
     )
-    grad_scaler = torch.cuda.amp.GradScaler(growth_interval=1_000_000)
+    grad_scaler = torch.amp.GradScaler("cuda", growth_interval=1_000_000)
     grad_clip_norm = 0.01
 
     for n in range(romatch.GLOBAL_STEP, N, k * romatch.STEP_SIZE):
-        mega_sampler = torch.utils.data.WeightedRandomSampler(
-            mega_ws, num_samples=batch_size * k, replacement=False
+        sampler = torch.utils.data.WeightedRandomSampler(
+            mixed_ws, num_samples=batch_size * k, replacement=False
         )
-        mega_dataloader = iter(
+        dataloader = iter(
             torch.utils.data.DataLoader(
-                megadepth_train,
+                mixed_train,
                 batch_size=batch_size,
-                sampler=mega_sampler,
+                sampler=sampler,
                 num_workers=8,
                 collate_fn=collate_fn
             )
         )
         train_k_steps(
-            n, k, mega_dataloader, ddp_model, depth_loss, optimizer, lr_scheduler, grad_scaler, grad_clip_norm=grad_clip_norm,
+            n,
+            k,
+            dataloader,
+            ddp_model,
+            depth_loss,
+            optimizer,
+            lr_scheduler,
+            grad_scaler,
+            grad_clip_norm=grad_clip_norm,
         )
+
         checkpointer.save(model, optimizer, lr_scheduler, romatch.GLOBAL_STEP)
 
-        # wandb.log(megadense_benchmark.benchmark(model), step = romatch.GLOBAL_STEP)
         if rank == 0:
-            hybrid_visualize_benchmark.benchmark(model)
+            mixed_visualize_benchmark.benchmark(model)
             results = megadense_benchmark.benchmark(model)
             for metric_name, value in results.items():
                 writ.writer.add_scalar(

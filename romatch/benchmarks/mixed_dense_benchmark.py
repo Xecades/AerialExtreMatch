@@ -1,19 +1,15 @@
 import torch
 import numpy as np
 import tqdm
-from romatch.datasets import MegadepthBuilder
+from romatch.datasets.mixed import get_megadepth_dataset
 from romatch.utils import warp_kpts
-from torch.utils.data import ConcatDataset
 from romatch.utils.collate import collate_fn_replace_corrupted
 from functools import partial
 import romatch
 
-class MegadepthDenseBenchmark:
-    def __init__(self, data_root="data/megadepth", h = 384, w = 512, num_samples = 2000) -> None:
-        mega = MegadepthBuilder(data_root=data_root)
-        self.dataset = ConcatDataset(
-            mega.build_scenes(split="test_loftr", ht=h, wt=w)
-        )  # fixed resolution of 384,512
+class MixedDenseBenchmark:
+    def __init__(self, h = 384, w = 512, num_samples = 2000) -> None:
+        self.dataset, self.ws = get_megadepth_dataset(h, w, train=False)
         self.num_samples = num_samples
 
     def geometric_dist(self, depth1, depth2, T_1to2, K1, K2, dense_matches):
@@ -51,7 +47,7 @@ class MegadepthDenseBenchmark:
             pck_3_tot = 0.0
             pck_5_tot = 0.0
             sampler = torch.utils.data.WeightedRandomSampler(
-                torch.ones(len(self.dataset)), replacement=False, num_samples=self.num_samples
+                self.ws, replacement=False, num_samples=self.num_samples
             )
             B = batch_size
             collate_fn = partial(collate_fn_replace_corrupted, dataset=self.dataset)
@@ -67,7 +63,7 @@ class MegadepthDenseBenchmark:
                     data["T_1to2"].cuda(),
                     data["K1"].cuda(),
                     data["K2"].cuda(),
-                )
+                ) 
                 matches, certainty = model.match(im_A, im_B, batched=True)
                 gd, pck_1, pck_3, pck_5, prob = self.geometric_dist(
                     depth1, depth2, T_1to2, K1, K2, matches

@@ -1,6 +1,6 @@
 import json
 
-from romatch.benchmarks import MegadepthDenseBenchmark
+from romatch.benchmarks import MixedDenseBenchmark
 from romatch.benchmarks import MegaDepthPoseEstimationBenchmark, HpatchesHomogBenchmark
 from romatch.benchmarks import Mega1500PoseLibBenchmark
 
@@ -37,7 +37,7 @@ def test_mega1500_poselib(model, name):
     json.dump(mega1500_results, open(f"results/mega1500_{name}.json", "w"))
 
 def test_mega_dense(model, name):
-    megadense_benchmark = MegadepthDenseBenchmark("data/megadepth", num_samples = 1000)
+    megadense_benchmark = MixedDenseBenchmark("data/megadepth", num_samples = 1000)
     megadense_results = megadense_benchmark.benchmark(model)
     json.dump(megadense_results, open(f"results/mega_dense_{name}.json", "w"))
     
