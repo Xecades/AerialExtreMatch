@@ -276,7 +276,7 @@ def train(args):
     megadense_benchmark = MegadepthDenseBenchmark(
         "data/megadepth", num_samples=1000, h=h, w=w)
     hybrid_visualize_benchmark = HybridVisualizeBenchmark(
-        "data/megadepth", num_samples=1000, h=h, w=w)
+        "data/megadepth", h=h, w=w)
     checkpointer = CheckPoint(checkpoint_dir, experiment_name)
     model, optimizer, lr_scheduler, global_step = checkpointer.load(
         model, optimizer, lr_scheduler, global_step)

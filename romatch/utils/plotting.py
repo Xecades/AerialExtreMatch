@@ -58,7 +58,7 @@ def error_colormap(err, thr, alpha=1.0):
 
 def make_matching_figure(
     img0, img1, mkpts0, mkpts1, color,
-    kpts0=None, kpts1=None, text=[], dpi=200, path=None
+    kpts0=None, kpts1=None, text=[], dpi=150, path=None
 ):
     # draw image pair
     assert mkpts0.shape[0] == mkpts1.shape[0], f"mkpts0: {mkpts0.shape[0]} v.s. mkpts1: {mkpts1.shape[0]}"
