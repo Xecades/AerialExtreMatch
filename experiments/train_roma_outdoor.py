@@ -10,7 +10,7 @@ from functools import partial
 import json
 import romatch.utils.writer as writ
 
-from romatch.benchmarks import MegadepthDenseBenchmark
+from romatch.benchmarks import MegadepthDenseBenchmark, HybridVisualizeBenchmark
 from romatch.datasets.megadepth import MegadepthBuilder
 from romatch.losses.robust_loss import RobustLosses
 from romatch.utils.collate import collate_fn_replace_corrupted
@@ -275,6 +275,8 @@ def train(args):
         optimizer, milestones=[(9*N/romatch.STEP_SIZE)//10])
     megadense_benchmark = MegadepthDenseBenchmark(
         "data/megadepth", num_samples=1000, h=h, w=w)
+    hybrid_visualize_benchmark = HybridVisualizeBenchmark(
+        "data/megadepth", num_samples=1000, h=h, w=w)
     checkpointer = CheckPoint(checkpoint_dir, experiment_name)
     model, optimizer, lr_scheduler, global_step = checkpointer.load(
         model, optimizer, lr_scheduler, global_step)
@@ -308,6 +310,7 @@ def train(args):
 
         # wandb.log(megadense_benchmark.benchmark(model), step = romatch.GLOBAL_STEP)
         if rank == 0:
+            hybrid_visualize_benchmark.benchmark(model)
             results = megadense_benchmark.benchmark(model)
             for metric_name, value in results.items():
                 writ.writer.add_scalar(
