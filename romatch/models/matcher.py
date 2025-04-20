@@ -616,6 +616,7 @@ class RegressionMatcher(nn.Module):
         *args,
         batched=False,
         device=None,
+        coarse_result=False,
     ):
         if device is None:
             device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -637,7 +638,6 @@ class RegressionMatcher(nn.Module):
             # check_rgb(im_B_input)
             im_B = im_B_input
 
-        symmetric = self.symmetric
         self.train(False)
         with torch.no_grad():
             if not batched:
@@ -663,90 +663,121 @@ class RegressionMatcher(nn.Module):
                 hs, ws = h, w
             finest_scale = 1
             # Run matcher
-            if symmetric:
+            if self.symmetric:
                 corresps = self.forward_symmetric(batch)
             else:
                 corresps = self.forward(batch, batched=True)
 
-            if self.upsample_preds:
-                hs, ws = self.upsample_res
-
-            if self.attenuate_cert:
-                low_res_certainty = F.interpolate(
-                    corresps[16]["certainty"], size=(hs, ws), align_corners=False, mode="bilinear"
-                )
-                cert_clamp = 0
-                factor = 0.5
-                low_res_certainty = factor * low_res_certainty * (low_res_certainty < cert_clamp)
-
-            if self.upsample_preds:
-                finest_corresps = corresps[finest_scale]
-                torch.cuda.empty_cache()
-                test_transform = get_tuple_transform_ops(
-                    resize=(hs, ws), normalize=True
-                )
-                if isinstance(im_A_input, (str, os.PathLike)):
-                    im_A, im_B = test_transform(
-                        (Image.open(im_A_input).convert('RGB'), Image.open(im_B_input).convert('RGB')))
-                else:
-                    im_A, im_B = test_transform((im_A_input, im_B_input))
-
-                im_A, im_B = im_A[None].to(device), im_B[None].to(device)
-                scale_factor = math.sqrt(self.upsample_res[0] * self.upsample_res[1] / (self.w_resized * self.h_resized))
-                batch = {"im_A": im_A, "im_B": im_B, "corresps": finest_corresps}
-                if symmetric:
-                    corresps = self.forward_symmetric(batch, upsample=True, batched=True, scale_factor=scale_factor)
-                else:
-                    corresps = self.forward(batch, batched=True, upsample=True, scale_factor=scale_factor)
-
-            im_A_to_im_B = corresps[finest_scale]["flow"]
-            certainty = corresps[finest_scale]["certainty"] - (low_res_certainty if self.attenuate_cert else 0)
-            if finest_scale != 1:
-                im_A_to_im_B = F.interpolate(
-                    im_A_to_im_B, size=(hs, ws), align_corners=False, mode="bilinear"
-                )
-                certainty = F.interpolate(
-                    certainty, size=(hs, ws), align_corners=False, mode="bilinear"
-                )
-            im_A_to_im_B = im_A_to_im_B.permute(
-                0, 2, 3, 1
+            fine_res = self.get_warp(
+                corresps=corresps,
+                im_A_input=im_A_input,
+                im_B_input=im_B_input,
+                hs=hs,
+                ws=ws,
+                b=b,
+                batched=batched,
+                device=device,
+                finest_scale=finest_scale,
             )
-            # Create im_A meshgrid
-            im_A_coords = torch.meshgrid(
-                (
-                    torch.linspace(-1 + 1 / hs, 1 - 1 / hs, hs, device=device),
-                    torch.linspace(-1 + 1 / ws, 1 - 1 / ws, ws, device=device),
-                ),
-                indexing='ij'
+
+            if coarse_result:
+                coarse_res = self.get_warp(
+                    corresps=corresps,
+                    im_A_input=im_A_input,
+                    im_B_input=im_B_input,
+                    hs=hs,
+                    ws=ws,
+                    b=b,
+                    batched=batched,
+                    device=device,
+                    finest_scale=16,
+                )
+                return fine_res, coarse_res
+
+            return fine_res
+
+
+    def get_warp(self, corresps, hs, ws, im_A_input, im_B_input, b, batched, device, finest_scale):
+        if self.upsample_preds:
+            hs, ws = self.upsample_res
+
+        if self.attenuate_cert:
+            low_res_certainty = F.interpolate(
+                corresps[16]["certainty"], size=(hs, ws), align_corners=False, mode="bilinear"
             )
-            im_A_coords = torch.stack((im_A_coords[1], im_A_coords[0]))
-            im_A_coords = im_A_coords[None].expand(b, 2, hs, ws)
-            certainty = certainty.sigmoid()  # logits -> probs
-            im_A_coords = im_A_coords.permute(0, 2, 3, 1)
-            if (im_A_to_im_B.abs() > 1).any() and True:
-                wrong = (im_A_to_im_B.abs() > 1).sum(dim=-1) > 0
-                certainty[wrong[:, None]] = 0
-            im_A_to_im_B = torch.clamp(im_A_to_im_B, -1, 1)
-            if symmetric:
-                A_to_B, B_to_A = im_A_to_im_B.chunk(2)
-                q_warp = torch.cat((im_A_coords, A_to_B), dim=-1)
-                im_B_coords = im_A_coords
-                s_warp = torch.cat((B_to_A, im_B_coords), dim=-1)
-                warp = torch.cat((q_warp, s_warp), dim=2)
-                certainty = torch.cat(certainty.chunk(2), dim=3)
+            cert_clamp = 0
+            factor = 0.5
+            low_res_certainty = factor * low_res_certainty * (low_res_certainty < cert_clamp)
+
+        if self.upsample_preds:
+            finest_corresps = corresps[finest_scale]
+            torch.cuda.empty_cache()
+            test_transform = get_tuple_transform_ops(
+                resize=(hs, ws), normalize=True
+            )
+            if isinstance(im_A_input, (str, os.PathLike)):
+                im_A, im_B = test_transform(
+                    (Image.open(im_A_input).convert('RGB'), Image.open(im_B_input).convert('RGB')))
             else:
-                warp = torch.cat((im_A_coords, im_A_to_im_B), dim=-1)
-            if batched:
-                return (
-                    warp,
-                    certainty[:, 0]
-                )
+                im_A, im_B = test_transform((im_A_input, im_B_input))
+
+            im_A, im_B = im_A[None].to(device), im_B[None].to(device)
+            scale_factor = math.sqrt(self.upsample_res[0] * self.upsample_res[1] / (self.w_resized * self.h_resized))
+            batch = {"im_A": im_A, "im_B": im_B, "corresps": finest_corresps}
+            if self.symmetric:
+                corresps = self.forward_symmetric(batch, upsample=True, batched=True, scale_factor=scale_factor)
             else:
-                return (
-                    warp[0],
-                    certainty[0, 0],
-                )
-                
+                corresps = self.forward(batch, batched=True, upsample=True, scale_factor=scale_factor)
+
+        im_A_to_im_B = corresps[finest_scale]["flow"]
+        certainty = corresps[finest_scale]["certainty"] - (low_res_certainty if self.attenuate_cert else 0)
+        if finest_scale != 1:
+            im_A_to_im_B = F.interpolate(
+                im_A_to_im_B, size=(hs, ws), align_corners=False, mode="bilinear"
+            )
+            certainty = F.interpolate(
+                certainty, size=(hs, ws), align_corners=False, mode="bilinear"
+            )
+        im_A_to_im_B = im_A_to_im_B.permute(
+            0, 2, 3, 1
+        )
+        # Create im_A meshgrid
+        im_A_coords = torch.meshgrid(
+            (
+                torch.linspace(-1 + 1 / hs, 1 - 1 / hs, hs, device=device),
+                torch.linspace(-1 + 1 / ws, 1 - 1 / ws, ws, device=device),
+            ),
+            indexing='ij'
+        )
+        im_A_coords = torch.stack((im_A_coords[1], im_A_coords[0]))
+        im_A_coords = im_A_coords[None].expand(b, 2, hs, ws)
+        certainty = certainty.sigmoid()  # logits -> probs
+        im_A_coords = im_A_coords.permute(0, 2, 3, 1)
+        if (im_A_to_im_B.abs() > 1).any() and True:
+            wrong = (im_A_to_im_B.abs() > 1).sum(dim=-1) > 0
+            certainty[wrong[:, None]] = 0
+        im_A_to_im_B = torch.clamp(im_A_to_im_B, -1, 1)
+        if self.symmetric:
+            A_to_B, B_to_A = im_A_to_im_B.chunk(2)
+            q_warp = torch.cat((im_A_coords, A_to_B), dim=-1)
+            im_B_coords = im_A_coords
+            s_warp = torch.cat((B_to_A, im_B_coords), dim=-1)
+            warp = torch.cat((q_warp, s_warp), dim=2)
+            certainty = torch.cat(certainty.chunk(2), dim=3)
+        else:
+            warp = torch.cat((im_A_coords, im_A_to_im_B), dim=-1)
+        if batched:
+            return (
+                warp,
+                certainty[:, 0]
+            )
+        else:
+            return (
+                warp[0],
+                certainty[0, 0],
+            )
+
+
     def visualize_warp(self, warp, certainty, im_A = None, im_B = None, 
                        im_A_path = None, im_B_path = None, device = "cuda", symmetric = True, save_path = None, unnormalize = False):
         #assert symmetric == True, "Currently assuming bidirectional warp, might update this if someone complains ;)"

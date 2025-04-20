@@ -105,7 +105,7 @@ def make_matching_figure(
         return fig
 
 
-def visualize_matches(data, threshold=1e-4, num_points=1000):
+def visualize_matches(data, threshold=1e-4, num_points=1000, dpi=150):
     im0 = unnormalize(data["image0"]).cpu().numpy()
     im1 = unnormalize(data["image1"]).cpu().numpy()
     im0 = (im0.transpose(1, 2, 0) * 255).round().astype(np.int32)
@@ -134,10 +134,11 @@ def visualize_matches(data, threshold=1e-4, num_points=1000):
         mkpts0=kpts0,
         mkpts1=kpts1,
         color=color,
+        dpi=dpi
     )
 
 
-def visualize_matches_roma(im_A, im_B, warp, T_1to2, K1, K2, threshold=1e-4, num_points=1000):
+def visualize_matches_roma(im_A, im_B, warp, T_1to2, K1, K2, threshold=1e-4, num_points=1000, dpi=150):
     _, H, W = im_A.shape
     px_warp = warp_to_pixel_coords(warp, H, W, H, W).reshape(-1, 4)
     data = {
@@ -154,7 +155,8 @@ def visualize_matches_roma(im_A, im_B, warp, T_1to2, K1, K2, threshold=1e-4, num
     return visualize_matches(
         data=data,
         threshold=threshold,
-        num_points=num_points
+        num_points=num_points,
+        dpi=dpi
     )
 
 
