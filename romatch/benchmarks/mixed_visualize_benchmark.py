@@ -68,7 +68,7 @@ class MixedVisualizeBenchmark:
                     K2=K2[b].cpu(),
                     threshold=1e-4,
                     num_points=300,
-                    dpi=100
+                    dpi=300
                 )
                 fig_c = visualize_matches_roma(
                     im_A=im_A[b].cpu(),
@@ -79,7 +79,7 @@ class MixedVisualizeBenchmark:
                     K2=K2[b].cpu(),
                     threshold=1e-4,
                     num_points=300,
-                    dpi=100
+                    dpi=300
                 )
                 fig_fs.append(fig_f)
                 fig_cs.append(fig_c)

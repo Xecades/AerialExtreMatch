@@ -65,7 +65,9 @@ def make_matching_figure(
     fig, axes = plt.subplots(1, 2, figsize=(10, 6), dpi=dpi)
     axes[0].imshow(img0, cmap="gray")
     axes[1].imshow(img1, cmap="gray")
-    for i in range(2):   # clear all frames
+    for i in range(2):
+        axes[i].set_xlim(0, img0.shape[1])
+        axes[i].set_ylim(img0.shape[0], 0)
         axes[i].get_yaxis().set_ticks([])
         axes[i].get_xaxis().set_ticks([])
         for spine in axes[i].spines.values():
