@@ -197,10 +197,9 @@ def train(args):
     torch.cuda.set_device(device_id)
 
     resolution = args.train_resolution
-    # wandb_log = not args.dont_log_wandb
     experiment_name = os.path.splitext(os.path.basename(__file__))[0]
-    # wandb_mode = "online" if wandb_log and rank == 0 else "disabled"
-    # wandb.init(project="romatch", entity=args.wandb_entity, name=experiment_name, reinit=False, mode = wandb_mode)
+    if args.use_pretained_roma:
+        experiment_name += "_pretrained_weights"
 
     writ.init_writer(experiment_name, rank)
 
@@ -212,6 +211,16 @@ def train(args):
         attenuate_cert=False
     ).to(device_id)
 
+    if args.use_pretained_roma:
+        # load pretained weights only if not already trained
+        if not os.path.exists(checkpoint_dir + experiment_name + f"_latest.pth"):
+            from romatch.models.model_zoo import weight_urls
+            print("Use pretrained weights.")
+            weights = torch.hub.load_state_dict_from_url(
+                weight_urls["romatch"]["outdoor"],
+                map_location=torch.device("cuda"))
+            model.load_state_dict(weights)
+
     # Num steps
     global_step = 0
     batch_size = args.gpu_batch_size
@@ -220,7 +229,7 @@ def train(args):
 
     N = (32 * 250000)  # 250k steps of batch size 32
     # checkpoint every
-    k = 30000 // romatch.STEP_SIZE
+    k = 300 // romatch.STEP_SIZE
 
     if not romatch.TEST_MODE:
         # Data
@@ -241,10 +250,18 @@ def train(args):
             c=1e-4
         )
 
-    parameters = [
-        {"params": model.encoder.parameters(), "lr": romatch.STEP_SIZE * 5e-6 / 8},
-        {"params": model.decoder.parameters(), "lr": romatch.STEP_SIZE * 1e-4 / 8},
-    ]
+    if args.use_pretained_roma:
+        # use smaller learning rate for pretrained weights
+        parameters = [
+            {"params": model.encoder.parameters(), "lr": romatch.STEP_SIZE * 5e-6 / 32},
+            {"params": model.decoder.parameters(), "lr": romatch.STEP_SIZE * 1e-4 / 32},
+        ]
+    else:
+        parameters = [
+            {"params": model.encoder.parameters(), "lr": romatch.STEP_SIZE * 5e-6 / 8},
+            {"params": model.decoder.parameters(), "lr": romatch.STEP_SIZE * 1e-4 / 8},
+        ]
+
     optimizer = torch.optim.AdamW(parameters, weight_decay=0.01)
     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
         optimizer, milestones=[(9*N/romatch.STEP_SIZE)//10])
@@ -293,7 +310,8 @@ def train(args):
                 grad_clip_norm=grad_clip_norm,
             )
 
-            checkpointer.save(model, optimizer, lr_scheduler, romatch.GLOBAL_STEP)
+            checkpointer.save(model, optimizer, lr_scheduler,
+                              romatch.GLOBAL_STEP)
 
         if rank == 0:
             mixed_visualize_benchmark.benchmark(model)
@@ -355,6 +373,7 @@ if __name__ == "__main__":
     parser.add_argument("--train_resolution", default='medium')
     parser.add_argument("--gpu_batch_size", default=8, type=int)
     parser.add_argument("--skip_training", action='store_true')
+    parser.add_argument("--use_pretained_roma", action='store_true')
 
     args, _ = parser.parse_known_args()
     romatch.TEST_MODE = args.skip_training
