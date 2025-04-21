@@ -180,6 +180,7 @@ class ExtredataBuilder:
         scenes = []
         for scene_name in scene_names:
 
+            # TODO: remove this
             _name = scene_name.split("_")[0]
             if _name not in ["Luzern0", "Luzern1", "NewYork1", "NewYork3", "NewYork4", "NewYork5", "Torino0", "Torino1", "Torino2", "Torino3"]:
                 continue

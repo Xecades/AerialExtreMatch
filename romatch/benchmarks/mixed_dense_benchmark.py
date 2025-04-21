@@ -1,15 +1,23 @@
 import torch
 import numpy as np
 import tqdm
-from romatch.datasets.mixed import get_megadepth_dataset
+import romatch.utils.writer as writ
+from romatch.datasets.mixed import get_megadepth_dataset, get_extredata_dataset, get_mixed_dataset
 from romatch.utils import warp_kpts
 from romatch.utils.collate import collate_fn_replace_corrupted
 from functools import partial
 import romatch
 
 class MixedDenseBenchmark:
-    def __init__(self, h = 384, w = 512, num_samples = 2000) -> None:
-        self.dataset, self.ws = get_megadepth_dataset(h, w, train=False)
+    def __init__(self, h = 384, w = 512, num_samples = 2000, dataset="megadepth") -> None:
+        assert dataset in ["megadepth", "extredata", "mixed"]
+        self.name = dataset
+        if dataset == "extredata":
+            self.dataset, self.ws = get_extredata_dataset(h, w, train=False)
+        elif dataset == "megadepth":
+            self.dataset, self.ws = get_megadepth_dataset(h, w, train=False)
+        elif dataset == "mixed":
+            self.dataset, self.ws = get_mixed_dataset(h, w, train=False, mega_percent=0.1)
         self.num_samples = num_samples
 
     def geometric_dist(self, depth1, depth2, T_1to2, K1, K2, dense_matches):
@@ -97,9 +105,17 @@ class MixedDenseBenchmark:
                     pck_3_tot + pck_3,
                     pck_5_tot + pck_5,
                 )
-        return {
+        results = {
             "epe": gd_tot.item() / len(dataloader),
             "mega_pck_1": pck_1_tot.item() / len(dataloader),
             "mega_pck_3": pck_3_tot.item() / len(dataloader),
             "mega_pck_5": pck_5_tot.item() / len(dataloader),
         }
+        for metric_name, value in results.items():
+            writ.writer.add_scalar(
+                f'validation-{self.name}/{metric_name}',
+                value,
+                romatch.GLOBAL_STEP
+            )
+        writ.writer.flush()
+        return results

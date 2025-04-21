@@ -266,7 +266,8 @@ def train(args):
     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
         optimizer, milestones=[(9*N/romatch.STEP_SIZE)//10])
 
-    megadense_benchmark = MixedDenseBenchmark(num_samples=1000, h=h, w=w)
+    megadepth_benchmark = MixedDenseBenchmark(num_samples=1000, h=h, w=w, dataset="megadepth")
+    extredata_benchmark = MixedDenseBenchmark(num_samples=1000, h=h, w=w, dataset="extredata")
     mixed_visualize_benchmark = MixedVisualizeBenchmark(h=h, w=w)
 
     checkpointer = CheckPoint(checkpoint_dir, experiment_name)
@@ -315,14 +316,8 @@ def train(args):
 
         if rank == 0:
             mixed_visualize_benchmark.benchmark(model)
-            results = megadense_benchmark.benchmark(model)
-            for metric_name, value in results.items():
-                writ.writer.add_scalar(
-                    f'validation/{metric_name}',
-                    value,
-                    romatch.GLOBAL_STEP
-                )
-            writ.writer.flush()
+            megadepth_benchmark.benchmark(model)
+            extredata_benchmark.benchmark(model)
 
 # def test_mega_8_scenes(model, name):
 #     mega_8_scenes_benchmark = MegaDepthPoseEstimationBenchmark("data/megadepth",
