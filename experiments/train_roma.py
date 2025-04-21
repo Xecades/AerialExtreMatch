@@ -222,23 +222,25 @@ def train(args):
     # checkpoint every
     k = 30000 // romatch.STEP_SIZE
 
-    # Data
-    mixed_train, mixed_ws = get_mixed_dataset(
-        h, w, train=True, mega_percent=0.1)
-    collate_fn = partial(
-        collate_fn_replace_corrupted,
-        dataset=mixed_train
-    )
+    if not romatch.TEST_MODE:
+        # Data
+        mixed_train, mixed_ws = get_mixed_dataset(
+            h, w, train=True, mega_percent=0.1)
+        collate_fn = partial(
+            collate_fn_replace_corrupted,
+            dataset=mixed_train
+        )
 
-    # Loss and optimizer
-    depth_loss = RobustLosses(
-        ce_weight=0.01,
-        local_dist={1: 4, 2: 4, 4: 8, 8: 8},
-        local_largest_scale=8,
-        depth_interpolation_mode="bilinear",
-        alpha=0.5,
-        c=1e-4
-    )
+        # Loss and optimizer
+        depth_loss = RobustLosses(
+            ce_weight=0.01,
+            local_dist={1: 4, 2: 4, 4: 8, 8: 8},
+            local_largest_scale=8,
+            depth_interpolation_mode="bilinear",
+            alpha=0.5,
+            c=1e-4
+        )
+
     parameters = [
         {"params": model.encoder.parameters(), "lr": romatch.STEP_SIZE * 5e-6 / 8},
         {"params": model.decoder.parameters(), "lr": romatch.STEP_SIZE * 1e-4 / 8},
@@ -248,49 +250,50 @@ def train(args):
         optimizer, milestones=[(9*N/romatch.STEP_SIZE)//10])
 
     megadense_benchmark = MixedDenseBenchmark(num_samples=1000, h=h, w=w)
-    mixed_visualize_benchmark = MixedVisualizeBenchmark(
-        num_samples=1000, h=h, w=w)
+    mixed_visualize_benchmark = MixedVisualizeBenchmark(h=h, w=w)
 
     checkpointer = CheckPoint(checkpoint_dir, experiment_name)
     model, optimizer, lr_scheduler, global_step = checkpointer.load(
         model, optimizer, lr_scheduler, global_step)
     romatch.GLOBAL_STEP = global_step
 
-    ddp_model = DDP(
-        model,
-        device_ids=[device_id],
-        find_unused_parameters=False,
-        gradient_as_bucket_view=True
-    )
-    grad_scaler = torch.amp.GradScaler("cuda", growth_interval=1_000_000)
-    grad_clip_norm = 0.01
+    if not romatch.TEST_MODE:
+        ddp_model = DDP(
+            model,
+            device_ids=[device_id],
+            find_unused_parameters=False,
+            gradient_as_bucket_view=True
+        )
+        grad_scaler = torch.amp.GradScaler("cuda", growth_interval=1_000_000)
+        grad_clip_norm = 0.01
 
     for n in range(romatch.GLOBAL_STEP, N, k * romatch.STEP_SIZE):
-        sampler = torch.utils.data.WeightedRandomSampler(
-            mixed_ws, num_samples=batch_size * k, replacement=False
-        )
-        dataloader = iter(
-            torch.utils.data.DataLoader(
-                mixed_train,
-                batch_size=batch_size,
-                sampler=sampler,
-                num_workers=8,
-                collate_fn=collate_fn
+        if not romatch.TEST_MODE:
+            sampler = torch.utils.data.WeightedRandomSampler(
+                mixed_ws, num_samples=batch_size * k, replacement=False
             )
-        )
-        train_k_steps(
-            n,
-            k,
-            dataloader,
-            ddp_model,
-            depth_loss,
-            optimizer,
-            lr_scheduler,
-            grad_scaler,
-            grad_clip_norm=grad_clip_norm,
-        )
+            dataloader = iter(
+                torch.utils.data.DataLoader(
+                    mixed_train,
+                    batch_size=batch_size,
+                    sampler=sampler,
+                    num_workers=8,
+                    collate_fn=collate_fn
+                )
+            )
+            train_k_steps(
+                n,
+                k,
+                dataloader,
+                ddp_model,
+                depth_loss,
+                optimizer,
+                lr_scheduler,
+                grad_scaler,
+                grad_clip_norm=grad_clip_norm,
+            )
 
-        checkpointer.save(model, optimizer, lr_scheduler, romatch.GLOBAL_STEP)
+            checkpointer.save(model, optimizer, lr_scheduler, romatch.GLOBAL_STEP)
 
         if rank == 0:
             mixed_visualize_benchmark.benchmark(model)
@@ -348,14 +351,12 @@ if __name__ == "__main__":
     import romatch
 
     parser = ArgumentParser()
-    parser.add_argument("--only_test", action='store_true')
     parser.add_argument("--debug_mode", action='store_true')
-    parser.add_argument("--dont_log_wandb", action='store_true')
     parser.add_argument("--train_resolution", default='medium')
     parser.add_argument("--gpu_batch_size", default=8, type=int)
-    parser.add_argument("--wandb_entity", required=False)
+    parser.add_argument("--skip_training", action='store_true')
 
     args, _ = parser.parse_known_args()
+    romatch.TEST_MODE = args.skip_training
     romatch.DEBUG_MODE = args.debug_mode
-    if not args.only_test:
-        train(args)
+    train(args)

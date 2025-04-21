@@ -10,20 +10,19 @@ from functools import partial
 
 
 class MixedVisualizeBenchmark:
-    def __init__(self, h=384, w=512, num_samples=2000) -> None:
+    def __init__(self, h=384, w=512) -> None:
         pl.seed_everything(2333)
 
         self.dataset, self.ws = get_mixed_dataset(
             h, w, train=False, mega_percent=0.1)
         self.batch_size = 8
-        self.num_samples = num_samples
 
         collate_fn = partial(
             collate_fn_replace_corrupted,
             dataset=self.dataset
         )
         self.sampler = torch.utils.data.WeightedRandomSampler(
-            self.ws, replacement=False, num_samples=self.num_samples
+            self.ws, replacement=False, num_samples=100
         )
         self.dataloader = torch.utils.data.DataLoader(
             self.dataset,
@@ -51,16 +50,19 @@ class MixedVisualizeBenchmark:
                 coarse_result=True
             )
 
-            matches_f, _ = model.sample(fine[0], fine[1], num=10000)
-            matches_c, _ = model.sample(coarse[0], coarse[1], num=10000)
+            matches_f, certainty_f = fine
+            matches_c, certainty_c = coarse
 
             fig_fs = []
             fig_cs = []
             for b in tqdm.trange(self.batch_size):
+                mf, _ = model.sample(matches_f[b], certainty_f[b], num=10000)
+                mc, _ = model.sample(matches_c[b], certainty_c[b], num=10000)
+
                 fig_f = visualize_matches_roma(
                     im_A=im_A[b].cpu(),
                     im_B=im_B[b].cpu(),
-                    warp=matches_f[b].cpu(),
+                    warp=mf.cpu(),
                     T_1to2=T_1to2[b].cpu(),
                     K1=K1[b].cpu(),
                     K2=K2[b].cpu(),
@@ -71,7 +73,7 @@ class MixedVisualizeBenchmark:
                 fig_c = visualize_matches_roma(
                     im_A=im_A[b].cpu(),
                     im_B=im_B[b].cpu(),
-                    warp=matches_c[b].cpu(),
+                    warp=mc.cpu(),
                     T_1to2=T_1to2[b].cpu(),
                     K1=K1[b].cpu(),
                     K2=K2[b].cpu(),
@@ -82,14 +84,21 @@ class MixedVisualizeBenchmark:
                 fig_fs.append(fig_f)
                 fig_cs.append(fig_c)
 
-            writ.writer.add_figure(
-                tag=f"visualization_fine",
-                figure=fig_fs,
-                global_step=romatch.GLOBAL_STEP
-            )
-            writ.writer.add_figure(
-                tag=f"visualization_coarse",
-                figure=fig_cs,
-                global_step=romatch.GLOBAL_STEP
-            )
-            writ.writer.flush()
+            if not romatch.TEST_MODE:
+                writ.writer.add_figure(
+                    tag=f"visualization_fine",
+                    figure=fig_fs,
+                    global_step=romatch.GLOBAL_STEP
+                )
+                writ.writer.add_figure(
+                    tag=f"visualization_coarse",
+                    figure=fig_cs,
+                    global_step=romatch.GLOBAL_STEP
+                )
+                writ.writer.flush()
+            else:
+                for i in range(self.batch_size):
+                    fig_fs[i].savefig(
+                        f"vis/visualize_fine_{romatch.GLOBAL_STEP}_{i}.png")
+                    fig_cs[i].savefig(
+                        f"vis/visualize_coarse_{romatch.GLOBAL_STEP}_{i}.png")

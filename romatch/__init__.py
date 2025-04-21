@@ -1,6 +1,7 @@
 import os
 from .models import roma_outdoor
 
+TEST_MODE = False
 DEBUG_MODE = False
 RANK = int(os.environ.get('RANK', default = 0))
 GLOBAL_STEP = 0
