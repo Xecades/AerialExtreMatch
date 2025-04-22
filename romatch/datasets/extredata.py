@@ -22,7 +22,7 @@ class ExtredataScene:
         min_overlap=0.0,
         max_overlap=1.0,
         normalize=True,
-        max_num_pairs=20000,  # * total 206850
+        max_num_pairs=20000,  # * total 2499030
     ) -> None:
         self.data_root = data_root
         self.scene_name = os.path.splitext(scene_name)[0]\
