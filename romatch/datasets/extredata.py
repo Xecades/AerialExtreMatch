@@ -154,19 +154,19 @@ class ExtredataBuilder:
         self.data_root = data_root
         self.scene_info_root = os.path.join(data_root, "scene_info")
         self.all_scenes = set(os.listdir(self.scene_info_root))
-        self.test_scenes = {"Luzern1_135@-284@-86@73@0@90.npy",
-                            "Tokyo3_134@2@-85@67@0@90.npy",
-                            "Luzern1_126@116@464@52@0@90.npy",
-                            "tokyo0_94@-433@26@51@0@90.npy",
-                            "Tokyo2_104@-283@-224@64@0@90.npy",
-                            "Luzern1_110@66@-486@59@0@90.npy",
-                            "Tokyo3_126@402@-135@50@0@90.npy",
-                            "Luzern1_149@-234@-36@64@0@90.npy",
-                            "Luzern0_121@216@-436@59@0@90.npy",
-                            "tokyo0_119@-283@-24@68@0@90.npy",
-                            "Luzern0_135@66@-386@64@0@90.npy",
-                            "Luzern1_134@-434@164@60@0@90.npy",
-                            "Luzern0_127@-34@164@69@0@90.npy"}
+        self.test_scenes = {"Madrid4_117@-83@276@68@0@90.npy",
+                            "Madrid4_90@-33@76@58@0@90.npy",
+                            "Madrid1_93@467@65@51@0@90.npy",
+                            "Berlin6_141@17@21@70@0@90.npy",
+                            "Tokyo5_92@167@326@64@0@90.npy",
+                            "Madrid1_93@-233@-385@59@0@90.npy",
+                            "German5_61@-263@139@63@0@90.npy",
+                            "Milano3_123@-434@318@58@0@90.npy",
+                            "NewYork4_138@-133@169@66@0@90.npy",
+                            "Bern0_143@216@-387@51@0@90.npy",
+                            "Berlin0_111@-133@-280@52@0@90.npy",
+                            "Madrid0_122@167@215@51@0@90.npy",
+                            "Milano2_134@116@218@51@0@90.npy"}
         self.ignore_scenes = set()
 
     def build_scenes(self, split: str = "train", **kwargs):
@@ -179,12 +179,6 @@ class ExtredataBuilder:
 
         scenes = []
         for scene_name in scene_names:
-
-            # TODO: remove this
-            _name = scene_name.split("_")[0]
-            if _name not in ["Luzern0", "Luzern1", "NewYork1", "NewYork3", "NewYork4", "NewYork5", "Torino0", "Torino1", "Torino2", "Torino3"]:
-                continue
-
             if ".npy" not in scene_name:
                 continue
             scene_info_path = os.path.join(self.scene_info_root, scene_name)
@@ -211,4 +205,4 @@ if __name__ == "__main__":
     dataset = ExtredataBuilder()
     train1 = dataset.build_scenes()
     train = ConcatDataset(train1)
-    print(len(train))  # * 206850
+    print(len(train))  # * 2499030
