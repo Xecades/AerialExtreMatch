@@ -10,4 +10,5 @@ matplotlib
 h5py
 timm
 poselib
+pytorch_lightning
 #xformers # Optional, used for memefficient attention

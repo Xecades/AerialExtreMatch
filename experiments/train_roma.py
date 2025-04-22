@@ -9,7 +9,7 @@ import torch.distributed as dist
 
 import romatch.utils.writer as writ
 from romatch.benchmarks import MixedDenseBenchmark, MixedVisualizeBenchmark
-from romatch.datasets import get_mixed_dataset
+from romatch.datasets import get_mixed_dataset, get_extredata_dataset
 from romatch.losses.robust_loss import RobustLosses
 from romatch.utils.collate import collate_fn_with
 
@@ -207,11 +207,12 @@ def train(args):
     model = get_model(
         pretrained_backbone=True,
         resolution=resolution,
-        attenuate_cert=False
+        attenuate_cert=False,
+        name=experiment_name,
     ).to(device_id)
 
     if args.use_pretained_roma:
-        # load pretained weights only if not already trained
+        # Load pretained weights only if not already trained
         if not os.path.exists(checkpoint_dir + experiment_name + f"_latest.pth"):
             from romatch.models.model_zoo import weight_urls
             print("Use pretrained weights.")
@@ -224,16 +225,21 @@ def train(args):
     global_step = 0
     batch_size = args.gpu_batch_size
     step_size = gpus * batch_size
-    romatch.STEP_SIZE = step_size
+    romatch.STEP_SIZE = step_size  # 24
 
-    N = (32 * 250000)  # 250k steps of batch size 32
+    N = (24 * 350000)  # 350k steps of batch size 24
     # checkpoint every
-    k = 300 // romatch.STEP_SIZE
+    k = 65000 // romatch.STEP_SIZE
 
     if not romatch.TEST_MODE:
         # Data
-        mixed_train, mixed_ws = get_mixed_dataset(
-            h, w, train=True, mega_percent=0.1)
+        if args.use_pretained_roma:
+            # When finetuning, use extredata dataset only
+            dataset, dataset_ws = get_extredata_dataset(
+                h, w, train=True)
+        else:
+            dataset, dataset_ws = get_mixed_dataset(
+                h, w, train=True, mega_percent=0.1)
 
         # Loss and optimizer
         depth_loss = RobustLosses(
@@ -246,7 +252,7 @@ def train(args):
         )
 
     if args.use_pretained_roma:
-        # use smaller learning rate for pretrained weights
+        # Use smaller learning rate for pretrained weights
         parameters = [
             {"params": model.encoder.parameters(), "lr": romatch.STEP_SIZE * 5e-6 / 80},
             {"params": model.decoder.parameters(), "lr": romatch.STEP_SIZE * 1e-4 / 80},
@@ -261,11 +267,18 @@ def train(args):
     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
         optimizer, milestones=[(9*N/romatch.STEP_SIZE)//10])
 
-    megadepth_benchmark = MixedDenseBenchmark(
-        num_samples=1000, h=h, w=w, dataset="megadepth")
     extredata_benchmark = MixedDenseBenchmark(
-        num_samples=1000, h=h, w=w, dataset="extredata")
-    mixed_visualize_benchmark = MixedVisualizeBenchmark(h=h, w=w)
+        h=h, w=w, num_samples=1000, dataset="extredata")
+
+    # TODO: remove constraint after megadepth uploaded
+    if not args.use_pretained_roma:
+        megadepth_benchmark = MixedDenseBenchmark(
+            h=h, w=w, num_samples=1000, dataset="megadepth")
+
+    # When finetuning, use extredata dataset only
+    vis_dataset = "extredata" if args.use_pretained_roma else "mixed"
+    mixed_visualize_benchmark = MixedVisualizeBenchmark(
+        h=h, w=w, count=8, dataset=vis_dataset)
 
     checkpointer = CheckPoint(checkpoint_dir, experiment_name)
     model, optimizer, lr_scheduler, global_step = checkpointer.load(
@@ -285,18 +298,18 @@ def train(args):
     for n in range(romatch.GLOBAL_STEP, N, k * romatch.STEP_SIZE):
         if not romatch.TEST_MODE:
             sampler = torch.utils.data.WeightedRandomSampler(
-                mixed_ws,
+                dataset_ws,
                 num_samples=batch_size * k,
                 replacement=False
             )
 
             dataloader = iter(
                 torch.utils.data.DataLoader(
-                    mixed_train,
+                    dataset,
                     batch_size=batch_size,
                     sampler=sampler,
                     num_workers=8,
-                    collate_fn=collate_fn_with(mixed_train),
+                    collate_fn=collate_fn_with(dataset),
                 )
             )
 
@@ -321,8 +334,11 @@ def train(args):
 
         if rank == 0:
             mixed_visualize_benchmark.benchmark(model)
-            megadepth_benchmark.benchmark(model)
             extredata_benchmark.benchmark(model)
+
+            # TODO: remove constraint after megadepth uploaded
+            if not args.use_pretained_roma:
+                megadepth_benchmark.benchmark(model)
 
 
 if __name__ == "__main__":

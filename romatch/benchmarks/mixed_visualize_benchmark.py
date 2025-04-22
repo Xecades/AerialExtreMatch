@@ -2,16 +2,24 @@ import torch
 import tqdm
 import romatch
 import romatch.utils.writer as writ
-from romatch.datasets import get_mixed_dataset
+from romatch.datasets import get_mixed_dataset, get_extredata_dataset, get_megadepth_dataset
 from romatch.utils.plotting import visualize_matches_roma
 from romatch.utils.collate import collate_fn_with
 
 
 class MixedVisualizeBenchmark:
-    def __init__(self, h=384, w=512) -> None:
-        self.dataset, self.ws = get_mixed_dataset(
-            h, w, train=False, mega_percent=0.1)
-        self.batch_size = 8
+    def __init__(self, h=384, w=512, count=8, dataset="mixed") -> None:
+        assert dataset in ["megadepth", "extredata", "mixed"]
+        self.name = dataset
+        self.batch_size = count
+
+        if dataset == "extredata":
+            self.dataset, self.ws = get_extredata_dataset(h, w, train=False)
+        elif dataset == "megadepth":
+            self.dataset, self.ws = get_megadepth_dataset(h, w, train=False)
+        elif dataset == "mixed":
+            self.dataset, self.ws = get_mixed_dataset(
+                h, w, train=False, mega_percent=0.1)
 
         self.sampler = torch.utils.data.WeightedRandomSampler(
             self.ws, replacement=False, num_samples=100
@@ -78,12 +86,12 @@ class MixedVisualizeBenchmark:
 
             if not romatch.TEST_MODE:
                 writ.writer.add_figure(
-                    tag=f"visualization_fine",
+                    tag=f"visualization_fine_{self.name}",
                     figure=fig_fs,
                     global_step=romatch.GLOBAL_STEP
                 )
                 writ.writer.add_figure(
-                    tag=f"visualization_coarse",
+                    tag=f"visualization_coarse_{self.name}",
                     figure=fig_cs,
                     global_step=romatch.GLOBAL_STEP
                 )
@@ -91,9 +99,9 @@ class MixedVisualizeBenchmark:
             else:
                 for i in range(self.batch_size):
                     fig_fs[i].savefig(
-                        f"vis/visualize_fine_{romatch.GLOBAL_STEP}_{i}.png")
+                        f"vis/visualize_fine_{self.name}_{romatch.GLOBAL_STEP}_{i}.png")
                     fig_cs[i].savefig(
-                        f"vis/visualize_coarse_{romatch.GLOBAL_STEP}_{i}.png")
+                        f"vis/visualize_coarse_{self.name}_{romatch.GLOBAL_STEP}_{i}.png")
 
         # Clean up
         for fig in fig_fs + fig_cs:
@@ -101,5 +109,9 @@ class MixedVisualizeBenchmark:
             fig.clear()
             del fig
         torch.cuda.empty_cache()
+
+        print(
+            f"Visualize {self.batch_size} matches for {self.name}, step {romatch.GLOBAL_STEP}"
+        )
 
         return fig_fs, fig_cs

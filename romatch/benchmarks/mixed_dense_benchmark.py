@@ -66,7 +66,7 @@ class MixedDenseBenchmark:
                 sampler=sampler,
                 collate_fn=collate_fn_with(self.dataset),
             )
-            for idx, data in tqdm.tqdm(enumerate(dataloader), disable=romatch.RANK > 0):
+            for idx, data in tqdm.tqdm(list(enumerate(dataloader)), disable=romatch.RANK > 0):
                 im_A, im_B, depth1, depth2, T_1to2, K1, K2 = (
                     data["im_A"].cuda(),
                     data["im_B"].cuda(),
