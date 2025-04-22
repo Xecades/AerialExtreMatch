@@ -1,5 +1,6 @@
 import random
 import torch
+import functools
 
 
 def collate_fn_replace_corrupted(batch, dataset):
@@ -32,3 +33,10 @@ def collate_fn_replace_corrupted(batch, dataset):
         return collate_fn_replace_corrupted(batch, dataset)
     # Finally, when the whole batch is fine, return it
     return torch.utils.data.dataloader.default_collate(batch)
+
+
+def collate_fn_with(dataset):
+    return functools.partial(
+        collate_fn_replace_corrupted,
+        dataset=dataset
+    )

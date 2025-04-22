@@ -4,11 +4,11 @@ import h5py
 import numpy as np
 import torch
 import torchvision.transforms.functional as tvf
-import kornia.augmentation as K
 from romatch.utils import get_depth_tuple_transform_ops, get_tuple_transform_ops
 import romatch
 from romatch.utils import *
 import math
+
 
 class MegadepthScene:
     def __init__(
@@ -20,29 +20,31 @@ class MegadepthScene:
         min_overlap=0.0,
         max_overlap=1.0,
         shake_t=0,
-        rot_prob=0.0,
         normalize=True,
-        max_num_pairs = 100_000,
-        scene_name = None,
-        use_horizontal_flip_aug = False,
-        use_single_horizontal_flip_aug = False,
-        colorjiggle_params = None,
-        random_eraser = None,
-        use_randaug = False,
-        randaug_params = None,
-        randomize_size = False,
+        max_num_pairs=100_000,
+        scene_name=None,
+        use_horizontal_flip_aug=False,
+        use_single_horizontal_flip_aug=False,
+        colorjiggle_params=None,
+        random_eraser=None,
+        use_randaug=False,
+        randomize_size=False,
     ) -> None:
         self.data_root = data_root
-        self.scene_name = os.path.splitext(scene_name)[0]+f"_{min_overlap}_{max_overlap}"
+        self.scene_name = os.path.splitext(scene_name)[0] +\
+            f"_{min_overlap}_{max_overlap}"
         self.image_paths = scene_info["image_paths"]
         self.depth_paths = scene_info["depth_paths"]
         self.intrinsics = scene_info["intrinsics"]
         self.poses = scene_info["poses"]
         self.pairs = scene_info["pairs"]
         self.overlaps = scene_info["overlaps"]
-        threshold = (self.overlaps > min_overlap) & (self.overlaps < max_overlap)
+
+        threshold = (self.overlaps > min_overlap) &\
+            (self.overlaps < max_overlap)
         self.pairs = self.pairs[threshold]
         self.overlaps = self.overlaps[threshold]
+
         if len(self.pairs) > max_num_pairs:
             pairinds = np.random.choice(
                 np.arange(0, len(self.pairs)), max_num_pairs, replace=False
@@ -52,20 +54,25 @@ class MegadepthScene:
         if randomize_size:
             area = ht * wt
             s = int(16 * (math.sqrt(area)//16))
-            sizes = ((ht,wt), (s,s), (wt,ht))
+            sizes = ((ht, wt), (s, s), (wt, ht))
             choice = romatch.RANK % 3
-            ht, wt = sizes[choice] 
+            ht, wt = sizes[choice]
         # counts, bins = np.histogram(self.overlaps,20)
         # print(counts)
+
         self.im_transform_ops = get_tuple_transform_ops(
-            resize=(ht, wt), normalize=normalize, colorjiggle_params = colorjiggle_params,
+            resize=(ht, wt),
+            normalize=normalize,
+            colorjiggle_params=colorjiggle_params,
         )
         self.depth_transform_ops = get_depth_tuple_transform_ops(
-                resize=(ht, wt)
-            )
+            resize=(ht, wt)
+        )
+
         self.wt, self.ht = wt, ht
         self.shake_t = shake_t
         self.random_eraser = random_eraser
+
         if use_horizontal_flip_aug and use_single_horizontal_flip_aug:
             raise ValueError("Can't both flip both images and only flip one")
         self.use_horizontal_flip_aug = use_horizontal_flip_aug
@@ -75,17 +82,18 @@ class MegadepthScene:
     def load_im(self, im_path):
         im = Image.open(im_path)
         return im
-    
+
     def horizontal_flip(self, im_A, im_B, depth_A, depth_B,  K_A, K_B):
         im_A = im_A.flip(-1)
         im_B = im_B.flip(-1)
-        depth_A, depth_B = depth_A.flip(-1), depth_B.flip(-1) 
-        flip_mat = torch.tensor([[-1, 0, self.wt],[0,1,0],[0,0,1.]]).to(K_A.device)
-        K_A = flip_mat@K_A  
-        K_B = flip_mat@K_B  
-        
+        depth_A, depth_B = depth_A.flip(-1), depth_B.flip(-1)
+        flip_mat = torch.tensor(
+            [[-1, 0, self.wt], [0, 1, 0], [0, 0, 1.]]).to(K_A.device)
+        K_A = flip_mat@K_A
+        K_B = flip_mat@K_B
+
         return im_A, im_B, depth_A, depth_B, K_A, K_B
-    
+
     def load_depth(self, depth_ref, crop=None):
         depth = np.array(h5py.File(depth_ref, "r")["depth"])
         return torch.from_numpy(depth)
@@ -101,15 +109,18 @@ class MegadepthScene:
     def rand_shake(self, *things):
         t = np.random.choice(range(-self.shake_t, self.shake_t + 1), size=2)
         return [
-            tvf.affine(thing, angle=0.0, translate=list(t), scale=1.0, shear=[0.0, 0.0])
+            tvf.affine(thing, angle=0.0, translate=list(
+                t), scale=1.0, shear=[0.0, 0.0])
             for thing in things
         ], t
 
     def __getitem__(self, pair_idx):
         # read intrinsics of original size
         idx1, idx2 = self.pairs[pair_idx]
-        K1 = torch.tensor(self.intrinsics[idx1].copy(), dtype=torch.float).reshape(3, 3)
-        K2 = torch.tensor(self.intrinsics[idx2].copy(), dtype=torch.float).reshape(3, 3)
+        K1 = torch.tensor(
+            self.intrinsics[idx1].copy(), dtype=torch.float).reshape(3, 3)
+        K2 = torch.tensor(
+            self.intrinsics[idx2].copy(), dtype=torch.float).reshape(3, 3)
 
         # read and compute relative poses
         T1 = self.poses[idx1]
@@ -146,29 +157,33 @@ class MegadepthScene:
         depth_A, depth_B = self.depth_transform_ops(
             (depth_A[None, None], depth_B[None, None])
         )
-        
-        [im_A, im_B, depth_A, depth_B], t = self.rand_shake(im_A, im_B, depth_A, depth_B)
+
+        [im_A, im_B, depth_A, depth_B], t = self.rand_shake(
+            im_A, im_B, depth_A, depth_B)
         K1[:2, 2] += t
         K2[:2, 2] += t
-        
+
         im_A, im_B = im_A[None], im_B[None]
         if self.random_eraser is not None:
             im_A, depth_A = self.random_eraser(im_A, depth_A)
             im_B, depth_B = self.random_eraser(im_B, depth_B)
-                
+
         if self.use_horizontal_flip_aug:
             if np.random.rand() > 0.5:
-                im_A, im_B, depth_A, depth_B, K1, K2 = self.horizontal_flip(im_A, im_B, depth_A, depth_B, K1, K2)
+                im_A, im_B, depth_A, depth_B, K1, K2 = self.horizontal_flip(
+                    im_A, im_B, depth_A, depth_B, K1, K2)
+
         if self.use_single_horizontal_flip_aug:
             if np.random.rand() > 0.5:
-                im_B, depth_B, K2 = self.single_horizontal_flip(im_B, depth_B, K2)
-        
+                im_B, depth_B, K2 = self.single_horizontal_flip(
+                    im_B, depth_B, K2)
+
         if romatch.DEBUG_MODE:
-            tensor_to_pil(im_A[0], unnormalize=True).save(
-                            f"vis/im_A.jpg")
-            tensor_to_pil(im_B[0], unnormalize=True).save(
-                            f"vis/im_B.jpg")
-            
+            tensor_to_pil(im_A[0], unnormalize=True)\
+                .save(f"vis/im_A.jpg")
+            tensor_to_pil(im_B[0], unnormalize=True)\
+                .save(f"vis/im_B.jpg")
+
         data_dict = {
             "im_A": im_A[0],
             "im_A_identifier": self.image_paths[idx1].split("/")[-1].split(".jpg")[0],
@@ -181,25 +196,26 @@ class MegadepthScene:
             "T_1to2": T_1to2,
             "im_A_path": im_A_ref,
             "im_B_path": im_B_ref,
-            
         }
         return data_dict
 
 
 class MegadepthBuilder:
-    def __init__(self, data_root="data/megadepth", loftr_ignore=True, imc21_ignore = True) -> None:
+    def __init__(self, data_root="data/megadepth", loftr_ignore=True, imc21_ignore=True) -> None:
         self.data_root = data_root
         self.scene_info_root = os.path.join(data_root, "prep_scene_info")
         self.all_scenes = os.listdir(self.scene_info_root)
         self.test_scenes = ["0017.npy", "0004.npy", "0048.npy", "0013.npy"]
         # LoFTR did the D2-net preprocessing differently than we did and got more ignore scenes, can optionially ignore those
-        self.loftr_ignore_scenes = set(['0121.npy', '0133.npy', '0168.npy', '0178.npy', '0229.npy', '0349.npy', '0412.npy', '0430.npy', '0443.npy', '1001.npy', '5014.npy', '5015.npy', '5016.npy'])
-        self.imc21_scenes = set(['0008.npy', '0019.npy', '0021.npy', '0024.npy', '0025.npy', '0032.npy', '0063.npy', '1589.npy'])
+        self.loftr_ignore_scenes = set(["0121.npy", "0133.npy", "0168.npy", "0178.npy", "0229.npy",
+                                       "0349.npy", "0412.npy", "0430.npy", "0443.npy", "1001.npy", "5014.npy", "5015.npy", "5016.npy"])
+        self.imc21_scenes = set(["0008.npy", "0019.npy", "0021.npy",
+                                "0024.npy", "0025.npy", "0032.npy", "0063.npy", "1589.npy"])
         self.test_scenes_loftr = ["0015.npy", "0022.npy"]
         self.loftr_ignore = loftr_ignore
         self.imc21_ignore = imc21_ignore
 
-    def build_scenes(self, split="train", min_overlap=0.0, scene_names = None, **kwargs):
+    def build_scenes(self, split="train", min_overlap=0.0, scene_names=None, **kwargs):
         if split == "train":
             scene_names = set(self.all_scenes) - set(self.test_scenes)
         elif split == "train_loftr":
@@ -220,12 +236,18 @@ class MegadepthBuilder:
                 continue
             if ".npy" not in scene_name:
                 continue
+
             scene_info = np.load(
-                os.path.join(self.scene_info_root, scene_name), allow_pickle=True
+                os.path.join(self.scene_info_root, scene_name),
+                allow_pickle=True
             ).item()
             scenes.append(
                 MegadepthScene(
-                    self.data_root, scene_info, min_overlap=min_overlap,scene_name = scene_name, **kwargs
+                    self.data_root,
+                    scene_info,
+                    min_overlap=min_overlap,
+                    scene_name=scene_name,
+                    **kwargs
                 )
             )
         return scenes

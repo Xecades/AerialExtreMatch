@@ -1,24 +1,26 @@
 import torch
-import numpy as np
 import tqdm
 import romatch.utils.writer as writ
 from romatch.datasets.mixed import get_megadepth_dataset, get_extredata_dataset, get_mixed_dataset
 from romatch.utils import warp_kpts
-from romatch.utils.collate import collate_fn_replace_corrupted
+from romatch.utils.collate import collate_fn_with
 from functools import partial
 import romatch
 
+
 class MixedDenseBenchmark:
-    def __init__(self, h = 384, w = 512, num_samples = 2000, dataset="megadepth") -> None:
+    def __init__(self, h=384, w=512, num_samples=2000, dataset="megadepth") -> None:
         assert dataset in ["megadepth", "extredata", "mixed"]
         self.name = dataset
+        self.num_samples = num_samples
+
         if dataset == "extredata":
             self.dataset, self.ws = get_extredata_dataset(h, w, train=False)
         elif dataset == "megadepth":
             self.dataset, self.ws = get_megadepth_dataset(h, w, train=False)
         elif dataset == "mixed":
-            self.dataset, self.ws = get_mixed_dataset(h, w, train=False, mega_percent=0.1)
-        self.num_samples = num_samples
+            self.dataset, self.ws = get_mixed_dataset(
+                h, w, train=False, mega_percent=0.1)
 
     def geometric_dist(self, depth1, depth2, T_1to2, K1, K2, dense_matches):
         b, h1, w1, d = dense_matches.shape
@@ -58,11 +60,14 @@ class MixedDenseBenchmark:
                 self.ws, replacement=False, num_samples=self.num_samples
             )
             B = batch_size
-            collate_fn = partial(collate_fn_replace_corrupted, dataset=self.dataset)
             dataloader = torch.utils.data.DataLoader(
-                self.dataset, batch_size=B, num_workers=batch_size, sampler=sampler, collate_fn=collate_fn
+                self.dataset,
+                batch_size=B,
+                num_workers=batch_size,
+                sampler=sampler,
+                collate_fn=collate_fn_with(self.dataset),
             )
-            for idx, data in tqdm.tqdm(enumerate(dataloader), disable = romatch.RANK > 0):
+            for idx, data in tqdm.tqdm(enumerate(dataloader), disable=romatch.RANK > 0):
                 im_A, im_B, depth1, depth2, T_1to2, K1, K2 = (
                     data["im_A"].cuda(),
                     data["im_B"].cuda(),
@@ -71,7 +76,7 @@ class MixedDenseBenchmark:
                     data["T_1to2"].cuda(),
                     data["K1"].cuda(),
                     data["K2"].cuda(),
-                ) 
+                )
                 matches, certainty = model.match(im_A, im_B, batched=True)
                 gd, pck_1, pck_3, pck_5, prob = self.geometric_dist(
                     depth1, depth2, T_1to2, K1, K2, matches
@@ -81,23 +86,24 @@ class MixedDenseBenchmark:
                     import torch.nn.functional as F
                     path = "vis"
                     H, W = model.get_output_resolution()
-                    white_im = torch.ones((B,1,H,W),device="cuda")
+                    white_im = torch.ones((B, 1, H, W), device="cuda")
                     im_B_transfer_rgb = F.grid_sample(
-                        im_B.cuda(), matches[:,:,:W, 2:], mode="bilinear", align_corners=False
+                        im_B.cuda(), matches[:, :, :W, 2:], mode="bilinear", align_corners=False
                     )
                     warp_im = im_B_transfer_rgb
-                    c_b = certainty[:,None]#(certainty*0.9 + 0.1*torch.ones_like(certainty))[:,None]
+                    # (certainty*0.9 + 0.1*torch.ones_like(certainty))[:,None]
+                    c_b = certainty[:, None]
                     vis_im = c_b * warp_im + (1 - c_b) * white_im
                     for b in range(B):
                         import os
-                        os.makedirs(f"{path}/{model.name}/{idx}_{b}_{H}_{W}",exist_ok=True)
+                        os.makedirs(
+                            f"{path}/{model.name}/{idx}_{b}_{H}_{W}", exist_ok=True)
                         tensor_to_pil(vis_im[b], unnormalize=True).save(
                             f"{path}/{model.name}/{idx}_{b}_{H}_{W}/warp.jpg")
                         tensor_to_pil(im_A[b].cuda(), unnormalize=True).save(
                             f"{path}/{model.name}/{idx}_{b}_{H}_{W}/im_A.jpg")
                         tensor_to_pil(im_B[b].cuda(), unnormalize=True).save(
                             f"{path}/{model.name}/{idx}_{b}_{H}_{W}/im_B.jpg")
-
 
                 gd_tot, pck_1_tot, pck_3_tot, pck_5_tot = (
                     gd_tot + gd.mean(),

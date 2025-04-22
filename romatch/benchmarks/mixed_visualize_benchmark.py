@@ -5,7 +5,7 @@ from romatch.datasets.mixed import get_mixed_dataset
 import romatch.utils.writer as writ
 import pytorch_lightning as pl
 from romatch.utils.plotting import visualize_matches_roma
-from romatch.utils.collate import collate_fn_replace_corrupted
+from romatch.utils.collate import collate_fn_with
 from functools import partial
 
 
@@ -17,10 +17,6 @@ class MixedVisualizeBenchmark:
             h, w, train=False, mega_percent=0.1)
         self.batch_size = 8
 
-        collate_fn = partial(
-            collate_fn_replace_corrupted,
-            dataset=self.dataset
-        )
         self.sampler = torch.utils.data.WeightedRandomSampler(
             self.ws, replacement=False, num_samples=100
         )
@@ -29,7 +25,7 @@ class MixedVisualizeBenchmark:
             batch_size=self.batch_size,
             num_workers=self.batch_size,
             sampler=self.sampler,
-            collate_fn=collate_fn,
+            collate_fn=collate_fn_with(self.dataset),
         )
         self.data = next(iter(self.dataloader))
 

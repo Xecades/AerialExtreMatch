@@ -5,13 +5,12 @@ from argparse import ArgumentParser
 from torch import nn
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
-from functools import partial
 import romatch.utils.writer as writ
 
 from romatch.benchmarks import MixedDenseBenchmark, MixedVisualizeBenchmark
 from romatch.datasets.mixed import get_mixed_dataset
 from romatch.losses.robust_loss import RobustLosses
-from romatch.utils.collate import collate_fn_replace_corrupted
+from romatch.utils.collate import collate_fn_with
 
 from romatch.train.train import train_k_steps
 from romatch.models.matcher import *
@@ -29,9 +28,9 @@ resolutions = {
 def get_model(pretrained_backbone=True, resolution="medium", **kwargs):
     import warnings
     warnings.filterwarnings(
-        'ignore',
+        "ignore",
         category=UserWarning,
-        message='TypedStorage is deprecated'
+        message="TypedStorage is deprecated"
     )
 
     gp_dim = 512
@@ -184,9 +183,9 @@ def get_model(pretrained_backbone=True, resolution="medium", **kwargs):
 
 
 def train(args):
-    dist.init_process_group('nccl')
+    dist.init_process_group("nccl")
     # torch._dynamo.config.verbose=True
-    gpus = int(os.environ['WORLD_SIZE'])
+    gpus = int(os.environ["WORLD_SIZE"])
     # create model and move it to GPU with id rank
     rank = dist.get_rank()
     print(f"Start running DDP on rank {rank}")
@@ -233,10 +232,6 @@ def train(args):
         # Data
         mixed_train, mixed_ws = get_mixed_dataset(
             h, w, train=True, mega_percent=0.1)
-        collate_fn = partial(
-            collate_fn_replace_corrupted,
-            dataset=mixed_train
-        )
 
         # Loss and optimizer
         depth_loss = RobustLosses(
@@ -264,8 +259,10 @@ def train(args):
     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
         optimizer, milestones=[(9*N/romatch.STEP_SIZE)//10])
 
-    megadepth_benchmark = MixedDenseBenchmark(num_samples=1000, h=h, w=w, dataset="megadepth")
-    extredata_benchmark = MixedDenseBenchmark(num_samples=1000, h=h, w=w, dataset="extredata")
+    megadepth_benchmark = MixedDenseBenchmark(
+        num_samples=1000, h=h, w=w, dataset="megadepth")
+    extredata_benchmark = MixedDenseBenchmark(
+        num_samples=1000, h=h, w=w, dataset="extredata")
     mixed_visualize_benchmark = MixedVisualizeBenchmark(h=h, w=w)
 
     checkpointer = CheckPoint(checkpoint_dir, experiment_name)
@@ -286,17 +283,21 @@ def train(args):
     for n in range(romatch.GLOBAL_STEP, N, k * romatch.STEP_SIZE):
         if not romatch.TEST_MODE:
             sampler = torch.utils.data.WeightedRandomSampler(
-                mixed_ws, num_samples=batch_size * k, replacement=False
+                mixed_ws,
+                num_samples=batch_size * k,
+                replacement=False
             )
+
             dataloader = iter(
                 torch.utils.data.DataLoader(
                     mixed_train,
                     batch_size=batch_size,
                     sampler=sampler,
                     num_workers=8,
-                    collate_fn=collate_fn
+                    collate_fn=collate_fn_with(mixed_train),
                 )
             )
+
             train_k_steps(
                 n,
                 k,
@@ -309,8 +310,12 @@ def train(args):
                 grad_clip_norm=grad_clip_norm,
             )
 
-            checkpointer.save(model, optimizer, lr_scheduler,
-                              romatch.GLOBAL_STEP)
+            checkpointer.save(
+                model,
+                optimizer,
+                lr_scheduler,
+                romatch.GLOBAL_STEP
+            )
 
         if rank == 0:
             mixed_visualize_benchmark.benchmark(model)
@@ -325,11 +330,11 @@ if __name__ == "__main__":
     import romatch
 
     parser = ArgumentParser()
-    parser.add_argument("--debug_mode", action='store_true')
-    parser.add_argument("--train_resolution", default='medium')
+    parser.add_argument("--debug_mode", action="store_true")
+    parser.add_argument("--train_resolution", default="medium")
     parser.add_argument("--gpu_batch_size", default=8, type=int)
-    parser.add_argument("--skip_training", action='store_true')
-    parser.add_argument("--use_pretained_roma", action='store_true')
+    parser.add_argument("--skip_training", action="store_true")
+    parser.add_argument("--use_pretained_roma", action="store_true")
 
     args, _ = parser.parse_known_args()
     romatch.TEST_MODE = args.skip_training

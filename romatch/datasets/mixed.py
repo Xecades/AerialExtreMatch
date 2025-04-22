@@ -60,13 +60,11 @@ def get_megadepth_dataset(h, w, train=True):
 
     if train:
         use_horizontal_flip_aug = True
-        rot_prob = 0
         scenes1 = builder.build_scenes(
             split="train_loftr",
             min_overlap=0.01,
             shake_t=32,
             use_horizontal_flip_aug=use_horizontal_flip_aug,
-            rot_prob=rot_prob,
             ht=h,
             wt=w,
         )
@@ -75,7 +73,6 @@ def get_megadepth_dataset(h, w, train=True):
             min_overlap=0.35,
             shake_t=32,
             use_horizontal_flip_aug=use_horizontal_flip_aug,
-            rot_prob=rot_prob,
             ht=h,
             wt=w,
         )
