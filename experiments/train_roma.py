@@ -3,12 +3,13 @@ import torch
 from argparse import ArgumentParser
 
 from torch import nn
-import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
-import romatch.utils.writer as writ
+import pytorch_lightning as pl
+import torch.distributed as dist
 
+import romatch.utils.writer as writ
 from romatch.benchmarks import MixedDenseBenchmark, MixedVisualizeBenchmark
-from romatch.datasets.mixed import get_mixed_dataset
+from romatch.datasets import get_mixed_dataset
 from romatch.losses.robust_loss import RobustLosses
 from romatch.utils.collate import collate_fn_with
 
@@ -199,6 +200,7 @@ def train(args):
         experiment_name += "_pretrained_weights"
 
     writ.init_writer(experiment_name, rank)
+    pl.seed_everything(args.seed)  # for reproducibility
 
     checkpoint_dir = "workspace/checkpoints/"
     h, w = resolutions[resolution]
@@ -335,6 +337,7 @@ if __name__ == "__main__":
     parser.add_argument("--gpu_batch_size", default=8, type=int)
     parser.add_argument("--skip_training", action="store_true")
     parser.add_argument("--use_pretained_roma", action="store_true")
+    parser.add_argument("--seed", default=2333, type=int)
 
     args, _ = parser.parse_known_args()
     romatch.TEST_MODE = args.skip_training

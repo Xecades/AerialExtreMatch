@@ -1,18 +1,14 @@
 import torch
 import tqdm
 import romatch
-from romatch.datasets.mixed import get_mixed_dataset
 import romatch.utils.writer as writ
-import pytorch_lightning as pl
+from romatch.datasets import get_mixed_dataset
 from romatch.utils.plotting import visualize_matches_roma
 from romatch.utils.collate import collate_fn_with
-from functools import partial
 
 
 class MixedVisualizeBenchmark:
     def __init__(self, h=384, w=512) -> None:
-        pl.seed_everything(2333)
-
         self.dataset, self.ws = get_mixed_dataset(
             h, w, train=False, mega_percent=0.1)
         self.batch_size = 8
@@ -98,3 +94,12 @@ class MixedVisualizeBenchmark:
                         f"vis/visualize_fine_{romatch.GLOBAL_STEP}_{i}.png")
                     fig_cs[i].savefig(
                         f"vis/visualize_coarse_{romatch.GLOBAL_STEP}_{i}.png")
+
+        # Clean up
+        for fig in fig_fs + fig_cs:
+            fig.clf()
+            fig.clear()
+            del fig
+        torch.cuda.empty_cache()
+
+        return fig_fs, fig_cs

@@ -1,5 +1,5 @@
-from romatch.datasets.extredata import ExtredataBuilder
-from romatch.datasets.megadepth import MegadepthBuilder
+from romatch.datasets import ExtredataBuilder
+from romatch.datasets import MegadepthBuilder
 from torch.utils.data import ConcatDataset
 import torch
 

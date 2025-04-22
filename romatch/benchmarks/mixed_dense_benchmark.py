@@ -1,11 +1,10 @@
 import torch
 import tqdm
+import romatch
 import romatch.utils.writer as writ
-from romatch.datasets.mixed import get_megadepth_dataset, get_extredata_dataset, get_mixed_dataset
+from romatch.datasets import get_megadepth_dataset, get_extredata_dataset, get_mixed_dataset
 from romatch.utils import warp_kpts
 from romatch.utils.collate import collate_fn_with
-from functools import partial
-import romatch
 
 
 class MixedDenseBenchmark:
