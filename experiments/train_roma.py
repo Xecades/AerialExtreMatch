@@ -246,8 +246,8 @@ def train(args):
     if args.use_pretained_roma:
         # use smaller learning rate for pretrained weights
         parameters = [
-            {"params": model.encoder.parameters(), "lr": romatch.STEP_SIZE * 5e-6 / 32},
-            {"params": model.decoder.parameters(), "lr": romatch.STEP_SIZE * 1e-4 / 32},
+            {"params": model.encoder.parameters(), "lr": romatch.STEP_SIZE * 5e-6 / 80},
+            {"params": model.decoder.parameters(), "lr": romatch.STEP_SIZE * 1e-4 / 80},
         ]
     else:
         parameters = [
