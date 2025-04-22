@@ -17,8 +17,6 @@ def log_param_statistics(named_parameters, norm_type = 2):
     total_grad_norm = torch.norm(grad_norms, norm_type)
     if torch.any(nans_or_infs):
         print(f"These params have nan or inf grads: {nan_inf_names}")
-    # wandb.log({"grad_norm": total_grad_norm.item()}, step = romatch.GLOBAL_STEP)
-    # wandb.log({"param_norm": param_norm.item()}, step = romatch.GLOBAL_STEP)
     writ.writer.add_scalar("grad_norm", total_grad_norm.item(), romatch.GLOBAL_STEP)
     writ.writer.add_scalar("param_norm", param_norm.item(), romatch.GLOBAL_STEP)
 
@@ -32,7 +30,6 @@ def train_step(train_batch, model, objective, optimizer, grad_scaler, grad_clip_
     torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip_norm) # what should max norm be?
     grad_scaler.step(optimizer)
     grad_scaler.update()
-    # wandb.log({"grad_scale": grad_scaler._scale.item()}, step = romatch.GLOBAL_STEP)
     writ.writer.add_scalar("grad_scale", grad_scaler._scale.item(), romatch.GLOBAL_STEP)
     if grad_scaler._scale < 1.:
         grad_scaler._scale = torch.tensor(1.).to(grad_scaler._scale)
@@ -64,7 +61,6 @@ def train_k_steps(
                 lr_scheduler.step()
         else:
             lr_scheduler.step()
-        # [wandb.log({f"lr_group_{grp}": lr}) for grp, lr in enumerate(lr_scheduler.get_last_lr())]
         for grp, lr in enumerate(lr_scheduler.get_last_lr()):
             writ.writer.add_scalar(f"lr/group_{grp}", lr, romatch.GLOBAL_STEP)
 
