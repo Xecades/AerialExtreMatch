@@ -4,7 +4,7 @@
 <br />
 
 > ExtreData: Lorem Ipsum Dolor Sit Amet  
-> [John Doe](), [Jane Doe]()
+> [John Doe](), [Jane Doe]()  
 > NeurIPS 2025
 
 ## Introduction
@@ -21,7 +21,9 @@ Follow the instructions on [RoMa](https://github.com/Parskatt/RoMa).
 
 ## Demo
 
-TBD.
+A matching demo is provided in the [demos folder](demo).
+
+See [RoMa](https://github.com/Parskatt/RoMa?tab=readme-ov-file#demo--how-to-use) for more details.
 
 ## Reproducing Results
 
@@ -30,7 +32,7 @@ The experiments are implemented in the [experiments folder](experiments).
 ### Training
 
 1. Follow the instructions on [DKM](https://github.com/Parskatt/DKM/blob/main/docs/training.md#megadepth) for downloading and preprocessing the MegaDepth dataset.
-2. Download the [ExtreData]() dataset and unzip it in the `data/extredata` folder.
+2. Download the [ExtreData]() dataset and unzip it into the `data/extredata` folder.  
    By now you should have the following folder structure in `data`:
     ```
     data
