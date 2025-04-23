@@ -21,7 +21,7 @@ Follow the instructions on [RoMa](https://github.com/Parskatt/RoMa).
 
 ## Demo
 
-A matching demo is provided in the [demos folder](demo).
+Two matching demos are provided in the [demos folder](demo). They are slightly adapted from the original RoMa demos for convenience and code clarity.
 
 See [RoMa](https://github.com/Parskatt/RoMa?tab=readme-ov-file#demo--how-to-use) for more details.
 
