@@ -1,1 +1,1 @@
-from .model_zoo import roma_outdoor
+from .model_zoo import roma_extre

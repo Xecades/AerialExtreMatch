@@ -1,5 +1,5 @@
 import os
-from .models import roma_outdoor
+from .models import roma_extre
 
 TEST_MODE = False
 DEBUG_MODE = False
