@@ -1,3 +1,7 @@
+# Heavily adapted from LoFTR:
+# https://github.com/zju3dv/LoFTR/blob/df7ca8/src/utils/plotting.py
+# MIT License
+
 import matplotlib.lines
 import torch
 import numpy as np
@@ -9,30 +13,10 @@ from romatch.utils.utils import warp_to_pixel_coords
 from kornia.geometry.epipolar import numeric
 
 
-def grid_sample_points(xs, ys, grid_size=20):
-    selected = []
-
-    visited = set()
-    for x, y in zip(xs, ys):
-        gx = x.item() // grid_size
-        gy = y.item() // grid_size
-        key = (gx, gy)
-        if key not in visited:
-            selected.append((x, y))
-            visited.add(key)
-    return zip(*selected) if selected else ([], [])
-
-
 def unnormalize(im, mean=imagenet_mean, std=imagenet_std):
     mean = mean[:, None, None].to(im.device)
     std = std[:, None, None].to(im.device)
     return im * std + mean
-
-
-def denormalize_grid(grid, H, W):
-    x = (grid[..., 0] + 1) * 0.5 * W
-    y = (grid[..., 1] + 1) * 0.5 * H
-    return torch.stack([x, y], axis=-1)  # [..., 2]
 
 
 def dynamic_alpha(n_matches,
@@ -199,6 +183,7 @@ def compute_symmetrical_epipolar_errors(data):
 
 
 if __name__ == "__main__":
+    # debug
     h, w = (14*8*5, 14*8*5)
     B = 8
 
