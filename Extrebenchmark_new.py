@@ -9,6 +9,8 @@ from immatch.datasets.extredataset import ExtreDataBuilder
 from immatch.localize.localize import QueryLocalizer
 from immatch.utils.metrics import cal_relapose_auc
 
+from immatch.utils.visualize import plot_match_2viewtest
+
 if __name__ == "__main__":
     import os
     os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
@@ -17,7 +19,7 @@ if __name__ == "__main__":
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 # device = "cpu"
-model_name = "superglue"
+model_name = "gim_roma"
 
 
 # Initialize model
@@ -89,7 +91,8 @@ for i in tqdm(range(32)):
                 
                     f_loc.write(str(batch_idx) + ' ' + str(np.nan) + ' ' + str(180.0) + '\n')
                     continue
-                # immatch.utils.plot_matches(im1, im2, matches, radius=2, lines=False, sav_fig=f"matches{batch_idx}.png")
+                # save_img = f"/media/guan/ZX1/ExeBenchmark/results/roma_ort/test/{batch_idx}.jpg"
+                # plot_match_2viewtest(im1, im2, matches, save_path=save_img)
                 matches_1to2 = torch.tensor(np.column_stack(
                     (matches[:, 0], matches[:, 1])).reshape(1, -1, 2)).to(device)
                 matches_2_hat = torch.tensor(np.column_stack(

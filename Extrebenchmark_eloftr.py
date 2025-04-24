@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 # device = "cpu"
-model_name = "superglue"
+model_name = "vggt"
 
 
 # Initialize model
@@ -42,7 +42,7 @@ if not os.path.exists(auc_path):
 
 
 # 数据加载
-for i in tqdm(range(32)):
+for i in tqdm(range(21,32)):
     ExtreData = ExtreDataBuilder(data_root=f"/media/guan/ZX1/ExeBenchmark/Benchmark/class_{i}/")
     name = f'class_{i}'
     save_path = pck_path + name + '_' + model_name + '.txt'

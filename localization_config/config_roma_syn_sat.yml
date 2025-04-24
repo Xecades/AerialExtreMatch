@@ -1,7 +1,7 @@
 data_path: "data/query/syn"
 yaw_flag: true
 method: "roma"
-
+dataname: "syn"
 
 query:
   query_path: "data/query/syn"
@@ -10,6 +10,7 @@ query:
   query_intrinsic_path: "data/query/syn/intrinsic.txt"
   query_gt_path: "data/query/syn/pose.txt"
   query_rot_img_path: "data/query/syn/rot_img"
+  query_gt_pose_path: "data/query/syn/pose.txt"
   ref_save: "data/query/syn/reference"
 
 ref:
