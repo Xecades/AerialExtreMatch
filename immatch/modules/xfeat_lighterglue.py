@@ -33,8 +33,10 @@ class XFeat_LighterGlue(Matching):
         )
 
     def match_pairs(self, im1_path, im2_path):
-        im1, _ = self.load_im(im1_path)
-        im2, _ = self.load_im(im2_path)
+        im1, sc1 = self.load_im(im1_path)
+        im2, sc2 = self.load_im(im2_path)
+
+        upscale = np.array([sc1 + sc2])
 
         out0 = self.model.detectAndCompute(im1)[0]
         out1 = self.model.detectAndCompute(im2)[0]
@@ -45,4 +47,5 @@ class XFeat_LighterGlue(Matching):
         mkpts1, mkpts2, _ = self.model.match_lighterglue(out0, out1)
         matches = np.concatenate([mkpts1, mkpts2], axis=1)
 
+        matches = upscale * matches
         return matches, None, None, None

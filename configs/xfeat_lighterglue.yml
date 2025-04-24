@@ -3,4 +3,4 @@ default: &default
   no_match_upscale: False
 example:
   <<: *default
-  imsize: -1
+  imsize: 1024

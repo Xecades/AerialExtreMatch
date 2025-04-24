@@ -16,7 +16,8 @@ class RoMa(Matching):
         super().__init__()
         # raise NotImplementedError("RoMa还有问题，得到的kpts超过了图像范围，可能需要过滤一下？")
 
-        self.model = roma_outdoor(self.device)
+        self.model = roma_outdoor(self.device,weights=torch.load("/media/guan/新加卷/train_roma_pretrained_weights_latest_1.pth")['model'])
+        # self.model = roma_outdoor(self.device)
         self.name = f"RoMa"
         print(f"Initialize {self.name}")
 

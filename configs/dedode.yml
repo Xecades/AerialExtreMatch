@@ -4,4 +4,4 @@ default: &default
   match_threshold: 0.0
 example:
   <<: *default
-  imsize: -1
+  imsize: 1024

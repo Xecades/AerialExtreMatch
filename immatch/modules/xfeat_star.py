@@ -33,10 +33,12 @@ class XFeatStar(Matching):
         )
 
     def match_pairs(self, im1_path, im2_path):
-        im1, _ = self.load_im(im1_path)
-        im2, _ = self.load_im(im2_path)
+        im1, sc1 = self.load_im(im1_path)
+        im2, sc2 = self.load_im(im2_path)
 
+        upscale = np.array([sc1 + sc2])
         mkpts1, mkpts2 = self.model.match_xfeat_star(im1, im2)
         matches = np.concatenate([mkpts1, mkpts2], axis=1)
 
+        matches = upscale * matches
         return matches, None, None, None

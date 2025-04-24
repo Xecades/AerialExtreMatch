@@ -9,13 +9,16 @@ from .modules.dedode import DeDoDe
 from .modules.xfeat import XFeat
 from .modules.xfeat_star import XFeatStar
 from .modules.xfeat_lighterglue import XFeat_LighterGlue
-# from .modules.aspanformer import ASpanFormer
+from .modules.aspanformer import ASpanFormer
 from .modules.loftr import LoFTR
 from .modules.eloftr import ELoFTR
+# from .modules.dust3r_old import Dust3rMatcher
 from .modules.dust3r import Dust3rMatcher
+# from .modules.mast3r_old import Mast3rMatcher
 from .modules.mast3r import Mast3rMatcher
 from .modules.roma import RoMa
 from .modules.vggt import VGGTMatcher
+from .modules.gim_roma import GIMRoMa
 # from .modules.d2net import D2Net
 # from .modules.r2d2 import R2D2
 # from .modules.patch2pix import Patch2Pix, NCNet, Patch2PixRefined

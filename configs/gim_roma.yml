@@ -1,0 +1,5 @@
+default: &default
+  class: "GIMRoMa"
+  checkpoints_path: 'pretrained/gimroma/gim_roma_100h.ckpt'
+example:
+  <<: *default

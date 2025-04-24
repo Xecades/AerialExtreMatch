@@ -175,8 +175,8 @@ class DOMLocalizer:
 
 
         # TODO 3D->2D vis, rot matches
-        matches_compute = self.project_3d_to_2d(world_points, self.K1, qpose)
-        plot_match_2view(qpath, matches_query, matches_compute, '1.jpg')
+        # matches_compute = self.project_3d_to_2d(world_points, self.K1, qpose)
+        # plot_match_2view(qpath, matches_query, matches_compute, '1.jpg')
 
 
         ret = self.localize(world_points, matches_query)

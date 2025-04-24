@@ -25,7 +25,7 @@ dtype = torch.bfloat16 if torch.cuda.get_device_capability()[0] >= 8 else torch.
 
 class VGGTMatcher(Matching):
     model_path = WEIGHTS_DIR.joinpath("model.pt")
-    vit_patch_size = 16
+    vit_patch_size = 14
 
     def __init__(self,*args):
         super().__init__()
@@ -51,16 +51,24 @@ class VGGTMatcher(Matching):
             print("Downloading VGGT... (takes a while)")
             py3_wget.download_file(url, VGGTMatcher.model_path)
 
-    def preprocess(self, path0, path1):
+    def preprocess(self, path0, path1, resize=518):
 
+        if isinstance(resize, int):
+            resize = (resize, resize)
         original_images = []
         img_paths = [path0, path1]
+        resize_images = []
         for img_path in img_paths:
             img = Image.open(img_path).convert('RGB')
             original_images.append(np.array(img))
-        
-        images = load_and_preprocess_images(img_paths).to('cuda')
+            if resize is not None:
+                img_resize = tfm.Resize(resize, antialias=True)(img)
+                img_tensor = tfm.ToTensor()(img_resize)
+                resize_images.append(img_tensor)
+        images = torch.stack(resize_images).to('cuda')
+        # images = load_and_preprocess_images(img_paths).to('cuda')
         # print(f"Preprocessed images shape: {images.shape}")
+
 
         S, C, H, W, = images.shape
         normalized_images = np.zeros((S, H, W, 3), dtype=np.float32)
@@ -106,13 +114,15 @@ class VGGTMatcher(Matching):
                 aggregated_tokens_list, ps_idx = self.vggt_model.aggregator(images)
                 track_list, vis_score, conf_score = self.vggt_model.track_head(aggregated_tokens_list, images, ps_idx, query_points=query_points[None])
 
-        matches_im0 = track_list[1].squeeze(0)[0,:,:].cpu().numpy()
-        matches_im1 = track_list[1].squeeze(0)[1,:,:].cpu().numpy()
+        matches_im0 = track_list[1].squeeze(0)[0,:,:][vis_score.squeeze(0)[1,:]>0.5].cpu().numpy()
+        matches_im1 = track_list[1].squeeze(0)[1,:,:][vis_score.squeeze(0)[1,:]>0.5].cpu().numpy()
 
         ori_H0, ori_W0 = original_images[0].shape[:2]
         ori_H1, ori_W1 = original_images[1].shape[:2]
         H0, W0 = images[0,0].shape[1:]
         H1, W1 = images[0,1].shape[1:]
+        # from immatch.utils.visualize import plot_match_2view
+        # plot_match_2view(normalized_images[0], normalized_images[1], matches_im0, matches_im1, "1.jpg", percent=1)
 
         mkpts0 = self.rescale_coords(matches_im0, ori_H0, ori_W0, H0, W0)
         mkpts1 = self.rescale_coords(matches_im1, ori_H1, ori_W1, H1, W1)

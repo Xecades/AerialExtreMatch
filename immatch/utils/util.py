@@ -206,11 +206,11 @@ def get_default_device():
 
     return device
 
-def aggregate_stats(info_str, pose_errors, angular_errors):
+def aggregate_stats(info_str, pose_errors, angular_errors, success):
     stats = collections.Counter()
     median_pos_error = np.median(pose_errors)
     median_angular_error = np.median(angular_errors)
-    out_str = f'{info_str}: {len(pose_errors)} images - {median_pos_error=}, {median_angular_error=}'
+    out_str = f'{info_str}:{np.sum(success)} / {len(pose_errors)} images - {median_pos_error=}, {median_angular_error=}'
 
     for trl_thr, ang_thr in [(5, 1), (10, 1), (20, 2), (50, 5), (100, 10)]:
         for pose_error, angular_error in zip(pose_errors, angular_errors):

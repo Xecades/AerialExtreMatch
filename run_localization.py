@@ -19,7 +19,7 @@ def load_config(config_file):
         config = yaml.safe_load(file)
     return config
 
-config_path = "/media/guan/data/sparse/ExtreBenchmark/localization_config/config_roma_syn.yml"
+config_path = "/media/guan/data/sparse/ExtreBenchmark/localization_config/config_roma_seq2.yml"
 config = load_config(config_path)
 
 # setting initialization
@@ -35,6 +35,7 @@ query_prior_path = query_config["query_prior_path"]
 query_intrinsic_path = query_config["query_intrinsic_path"]
 query_rot_img_path = query_config["query_rot_img_path"]
 ref_save = query_config["ref_save"]
+query_gt_pose_path = query_config["query_gt_pose_path"]
 if not os.path.exists(query_rot_img_path):
     os.makedirs(query_rot_img_path)
 # ref
@@ -62,17 +63,19 @@ def matcher(im1, im2): return model.match_pairs(im1, im2)
 query_pose = parse_pose_list(query_prior_path)
 query_intrinsic = parse_intrinsic_list(query_intrinsic_path)
 query_osg = parse_pose_osg(query_prior_path)
+query_gt_pose = parse_pose_list(query_gt_pose_path)
 data = generate_ref_map(query_intrinsic, query_pose, ref_DSM_path, ref_DOM_path, ref_npy_path, ref_save)
 # 
 poses_errors = []
 angle_errors = []
+success = []
 
 with open(result_txt, 'w') as f_result:
     for qname in tqdm(data.keys()):
         imgr_path = os.path.join(ref_save, 'rgb', data[qname]['imgr_name'] + '.jpg')
         exr_path = os.path.join(ref_save, 'npy', data[qname]['exr_name'] + '.npy')
         q_intrinsic = query_intrinsic[qname]
-        ori_path = os.path.join(query_img_path, qname+'.jpg')
+        ori_path = os.path.join(query_img_path, qname+'.JPG') #JPG,jpg
         rot_R = None
         if yaw_flag:
             yaw = query_osg[qname][0][2]
@@ -81,12 +84,16 @@ with open(result_txt, 'w') as f_result:
             rot_img_save_path = os.path.join(query_rot_img_path, qname+'.jpg')
             cv2.imwrite(rot_img_save_path, rot_img)
             mathes, _, _, _ = matcher(rot_img_save_path, imgr_path)
-            plot_match(ori_path, rot_img_save_path, imgr_path, mathes, matching_path, qname, rot_R)
+            if len(mathes) > 0:
+                plot_match(ori_path, rot_img_save_path, imgr_path, mathes, matching_path, qname, rot_R, percent=0.2)
         else:
             mathes, _, _, _ = matcher(ori_path, imgr_path)
         
         
-        if len(mathes) <= 4:
+        if len(mathes) < 5:
+            poses_errors.append(np.inf)
+            angle_errors.append(180)
+            success.append(0)
             continue
 
         domlocalizer = DOMLocalizer(
@@ -98,12 +105,14 @@ with open(result_txt, 'w') as f_result:
         # eval
         error_t, error_r = domlocalizer.eval(
                         pred_matrix=pred_matrix,
-                        gt_pose=query_pose[qname],
+                        gt_pose=query_gt_pose[qname],
                     )
         f_result.write(str(qname) + ' ' + str(error_t) + ' ' + str(error_r) + '\n')
         poses_errors.append(error_t)
         angle_errors.append(error_r)
+        if error_t != np.nan:
+            success.append(1)
 
-out_string = aggregate_stats(f'{dataset}', poses_errors, angle_errors)
-print(out_string)
-f_result.write(out_string)
+    out_string = aggregate_stats(f'{dataset}', poses_errors, angle_errors, success)
+    print(out_string)
+    f_result.write(out_string)
