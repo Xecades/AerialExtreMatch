@@ -269,11 +269,8 @@ def train(args):
 
     extredata_benchmark = MixedDenseBenchmark(
         h=h, w=w, num_samples=1000, dataset="extredata")
-
-    # TODO: remove constraint after megadepth uploaded
-    if not args.use_pretained_roma:
-        megadepth_benchmark = MixedDenseBenchmark(
-            h=h, w=w, num_samples=1000, dataset="megadepth")
+    megadepth_benchmark = MixedDenseBenchmark(
+        h=h, w=w, num_samples=1000, dataset="megadepth")
 
     # When finetuning, use extredata dataset only
     vis_dataset = "extredata" if args.use_pretained_roma else "mixed"
@@ -335,10 +332,7 @@ def train(args):
         if rank == 0:
             mixed_visualize_benchmark.benchmark(model)
             extredata_benchmark.benchmark(model)
-
-            # TODO: remove constraint after megadepth uploaded
-            if not args.use_pretained_roma:
-                megadepth_benchmark.benchmark(model)
+            megadepth_benchmark.benchmark(model)
 
 
 if __name__ == "__main__":
