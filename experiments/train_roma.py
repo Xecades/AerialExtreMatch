@@ -9,7 +9,7 @@ import torch.distributed as dist
 
 import romatch.utils.writer as writ
 from romatch.benchmarks import MixedDenseBenchmark, MixedVisualizeBenchmark
-from romatch.datasets import get_mixed_dataset, get_extredata_dataset
+from romatch.datasets import get_mixed_dataset, get_extredata_dataset, get_megadepth_dataset
 from romatch.losses.robust_loss import RobustLosses
 from romatch.utils.collate import collate_fn_with
 
@@ -200,7 +200,7 @@ def train(args):
         experiment_name += "_pretrained_weights"
 
     writ.init_writer(experiment_name, rank)
-    pl.seed_everything(args.seed)  # for reproducibility
+    pl.seed_everything(args.seed)
 
     checkpoint_dir = "workspace/checkpoints/"
     h, w = resolutions[resolution]
@@ -234,12 +234,11 @@ def train(args):
     if not romatch.TEST_MODE:
         # Data
         if args.use_pretained_roma:
-            # When finetuning, use extredata dataset only
-            dataset, dataset_ws = get_extredata_dataset(
-                h, w, train=True)
+            dataset, dataset_ws = get_mixed_dataset(
+                h, w, train=True, mega_percent=0.8)
         else:
             dataset, dataset_ws = get_mixed_dataset(
-                h, w, train=True, mega_percent=0.1)
+                h, w, train=True, mega_percent=0.9)
 
         # Loss and optimizer
         depth_loss = RobustLosses(
@@ -254,8 +253,8 @@ def train(args):
     if args.use_pretained_roma:
         # Use smaller learning rate for pretrained weights
         parameters = [
-            {"params": model.encoder.parameters(), "lr": romatch.STEP_SIZE * 5e-6 / 80},
-            {"params": model.decoder.parameters(), "lr": romatch.STEP_SIZE * 1e-4 / 80},
+            {"params": model.encoder.parameters(), "lr": romatch.STEP_SIZE * 5e-6 / 800},
+            {"params": model.decoder.parameters(), "lr": romatch.STEP_SIZE * 1e-4 / 800},
         ]
     else:
         parameters = [
@@ -271,11 +270,8 @@ def train(args):
         h=h, w=w, num_samples=1000, dataset="extredata")
     megadepth_benchmark = MixedDenseBenchmark(
         h=h, w=w, num_samples=1000, dataset="megadepth")
-
-    # When finetuning, use extredata dataset only
-    vis_dataset = "extredata" if args.use_pretained_roma else "mixed"
     mixed_visualize_benchmark = MixedVisualizeBenchmark(
-        h=h, w=w, count=8, dataset=vis_dataset)
+        h=h, w=w, count=8, dataset="mixed")
 
     checkpointer = CheckPoint(checkpoint_dir, experiment_name)
     model, optimizer, lr_scheduler, global_step = checkpointer.load(
@@ -305,7 +301,7 @@ def train(args):
                     dataset,
                     batch_size=batch_size,
                     sampler=sampler,
-                    num_workers=8,
+                    num_workers=32,
                     collate_fn=collate_fn_with(dataset),
                 )
             )

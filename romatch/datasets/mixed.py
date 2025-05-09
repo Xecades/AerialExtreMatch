@@ -24,17 +24,24 @@ def get_mixed_dataset(h, w, train=True, mega_percent=0.1):
 
 def get_extredata_dataset(h, w, train=True):
     builder = ExtredataBuilder(data_root="data/extredata")
-
     if train:
+        use_horizontal_flip_aug = True
+        use_randaug = True
         scense1 = builder.build_scenes(
             split="train",
             min_overlap=0.01,
+            shake_t=32,
+            use_horizontal_flip_aug=use_horizontal_flip_aug,
+            use_randaug=use_randaug,
             ht=h,
             wt=w,
         )
         scenes2 = builder.build_scenes(
             split="train",
             min_overlap=0.35,
+            shake_t=32,
+            use_horizontal_flip_aug=use_horizontal_flip_aug,
+            use_randaug=use_randaug,
             ht=h,
             wt=w,
         )

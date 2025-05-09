@@ -2,7 +2,9 @@ from typing import Dict
 import numpy as np
 import torch
 import kornia.augmentation as K
+import albumentations as A
 from kornia.geometry.transform import warp_perspective
+
 
 # Adapted from Kornia
 class GeometricSequential:
@@ -16,7 +18,8 @@ class GeometricSequential:
         for t in self.transforms:
             if np.random.rand() < t.p:
                 M = M.matmul(
-                    t.compute_transformation(x, t.generate_parameters((b, c, h, w)), None)
+                    t.compute_transformation(
+                        x, t.generate_parameters((b, c, h, w)), None)
                 )
         return (
             warp_perspective(
@@ -81,7 +84,8 @@ class RandomPerspective(K.RandomPerspective):
                 f"'distortion_scale' must be a scalar within [0, 1]. Got {distortion_scale}."
             )
         if not (
-            type(height) is int and height > 0 and type(width) is int and width > 0
+            type(height) is int and height > 0 and type(
+                width) is int and width > 0
         ):
             raise AssertionError(
                 f"'height' and 'width' must be integers. Got {height}, {width}."
@@ -104,15 +108,31 @@ class RandomPerspective(K.RandomPerspective):
         return dict(start_points=start_points, end_points=end_points)
 
 
-
 class RandomErasing:
-    def __init__(self, p = 0., scale = 0.) -> None:
+    def __init__(self, p=0., scale=0.) -> None:
         self.p = p
         self.scale = scale
-        self.random_eraser = K.RandomErasing(scale = (0.02, scale), p = p)
+        self.random_eraser = K.RandomErasing(scale=(0.02, scale), p=p)
+
     def __call__(self, image, depth):
         if self.p > 0:
             image = self.random_eraser(image)
-            depth = self.random_eraser(depth, params=self.random_eraser._params)
+            depth = self.random_eraser(
+                depth, params=self.random_eraser._params)
         return image, depth
-        
+
+
+class RandomColorAug(object):
+    def __init__(self) -> None:
+        self.augmentor = A.Compose([
+            A.RandomBrightnessContrast(
+                p=0.75, brightness_limit=(-0.4, 0.4), contrast_limit=(-0.5, 0.5)),
+            A.ColorJitter(
+                p=0.5, brightness=(0.5, 0.9), contrast=(0.5, 1.2), saturation=(0.4, 2.0), hue=(-0.2, 0.2)),
+            A.Blur(p=0.1, blur_limit=(3, 9)),
+            A.RandomGamma(p=0.1, gamma_limit=(80, 120)),
+            A.HueSaturationValue(p=0.15)
+        ], p=0.75)
+
+    def __call__(self, x):
+        return self.augmentor(image=x)["image"]

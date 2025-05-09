@@ -4,9 +4,9 @@ import h5py
 import numpy as np
 import torch
 import torchvision.transforms.functional as tvf
-from romatch.utils import get_depth_tuple_transform_ops, get_tuple_transform_ops
-import romatch
 from romatch.utils import *
+from romatch.utils.transforms import RandomColorAug
+import romatch
 import math
 
 
@@ -149,34 +149,38 @@ class MegadepthScene:
         K1 = self.scale_intrinsic(K1, im_A.width, im_A.height)
         K2 = self.scale_intrinsic(K2, im_B.width, im_B.height)
 
-        if self.use_randaug:
-            im_A, im_B = self.rand_augment(im_A, im_B)
-
         # Process images
-        im_A, im_B = self.im_transform_ops((im_A, im_B))
-        depth_A, depth_B = self.depth_transform_ops(
-            (depth_A[None, None], depth_B[None, None])
-        )
+        try:
+            if self.use_randaug:
+                im_A, im_B = self.rand_augment(im_A, im_B)
 
-        [im_A, im_B, depth_A, depth_B], t = self.rand_shake(
-            im_A, im_B, depth_A, depth_B)
-        K1[:2, 2] += t
-        K2[:2, 2] += t
+            im_A, im_B = self.im_transform_ops((im_A, im_B))
+            depth_A, depth_B = self.depth_transform_ops(
+                (depth_A[None, None], depth_B[None, None])
+            )
 
-        im_A, im_B = im_A[None], im_B[None]
-        if self.random_eraser is not None:
-            im_A, depth_A = self.random_eraser(im_A, depth_A)
-            im_B, depth_B = self.random_eraser(im_B, depth_B)
+            [im_A, im_B, depth_A, depth_B], t = self.rand_shake(
+                im_A, im_B, depth_A, depth_B)
+            K1[:2, 2] += t
+            K2[:2, 2] += t
 
-        if self.use_horizontal_flip_aug:
-            if np.random.rand() > 0.5:
-                im_A, im_B, depth_A, depth_B, K1, K2 = self.horizontal_flip(
-                    im_A, im_B, depth_A, depth_B, K1, K2)
+            im_A, im_B = im_A[None], im_B[None]
+            if self.random_eraser is not None:
+                im_A, depth_A = self.random_eraser(im_A, depth_A)
+                im_B, depth_B = self.random_eraser(im_B, depth_B)
 
-        if self.use_single_horizontal_flip_aug:
-            if np.random.rand() > 0.5:
-                im_B, depth_B, K2 = self.single_horizontal_flip(
-                    im_B, depth_B, K2)
+            if self.use_horizontal_flip_aug:
+                if np.random.rand() > 0.5:
+                    im_A, im_B, depth_A, depth_B, K1, K2 = self.horizontal_flip(
+                        im_A, im_B, depth_A, depth_B, K1, K2)
+
+            if self.use_single_horizontal_flip_aug:
+                if np.random.rand() > 0.5:
+                    im_B, depth_B, K2 = self.single_horizontal_flip(
+                        im_B, depth_B, K2)
+        except Exception as e:
+            print(f"Error in transform ({self.image_paths[idx1]}, {self.image_paths[idx1]}):", e)
+            return None
 
         if romatch.DEBUG_MODE:
             tensor_to_pil(im_A[0], unnormalize=True)\

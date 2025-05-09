@@ -19,7 +19,7 @@ class MixedVisualizeBenchmark:
             self.dataset, self.ws = get_megadepth_dataset(h, w, train=False)
         elif dataset == "mixed":
             self.dataset, self.ws = get_mixed_dataset(
-                h, w, train=False, mega_percent=0.1)
+                h, w, train=False, mega_percent=0.6)
 
         self.sampler = torch.utils.data.WeightedRandomSampler(
             self.ws, replacement=False, num_samples=100

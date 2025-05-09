@@ -19,7 +19,7 @@ class MixedDenseBenchmark:
             self.dataset, self.ws = get_megadepth_dataset(h, w, train=False)
         elif dataset == "mixed":
             self.dataset, self.ws = get_mixed_dataset(
-                h, w, train=False, mega_percent=0.1)
+                h, w, train=False, mega_percent=0.6)
 
     def geometric_dist(self, depth1, depth2, T_1to2, K1, K2, dense_matches):
         b, h1, w1, d = dense_matches.shape
