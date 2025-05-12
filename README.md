@@ -3,9 +3,9 @@
 
 <br />
 
-> AerialExtreMatch: A Benchmark for Extreme-View Image Matching and Localization  
-<!-- > [John Doe](), [Jane Doe]()   -->
-<!-- > NeurIPS 2025 -->
+> **AerialExtreMatch: A Benchmark for Extreme-View Image Matching and Localization**  
+> Rouwan Wu, Zhe Huang, Xingyi He, Yan Liu, Shen Yan, Sida Peng, Maojun Zhang, Xiaowei Zhou  
+> <!-- NeurIPS --> 2025
 
 > [!WARNING]  
 > Code and the dataset are under preparation, and will be released soon.
