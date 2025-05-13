@@ -8,11 +8,17 @@
 
 ## Introduction
 
-This branch contains the code for training from scratch and finetuning the [RoMa](https://arxiv.org/abs/2305.15404) model on our proposed **AerialExtreMatch** dataset. The code is built on top of the [RoMa repo](https://github.com/Parskatt/RoMa). It is recommended to check out the original repo for more details on the model and its usage.
+This branch contains the code for training from scratch and fine-tuning the [RoMa](https://arxiv.org/abs/2305.15404) model on our proposed **AerialExtreMatch** dataset. The code is built on top of the [RoMa repo](https://github.com/Parskatt/RoMa). It is recommended to check out the original repo for more details on the model and its usage.
+
+<p align="center">
+    <img src="demo/assets/validation.png" alt="validation curve" width=100%>
+    <br>
+    <em>Validation curve on AerialExtreMatch-Benchmark of the fine-tuning process.</em>
+</p>
 
 ## Checkpoints
 
-We provide our finetuned weights for the AerialExtreMatch dataset at [[Release]](https://github.com/Xecades/AerialExtreMatch/releases).
+We provide our fine-tuned weights for the AerialExtreMatch dataset at [[Release]](https://github.com/Xecades/AerialExtreMatch/releases).
 
 ## Setup / Settings / Usage
 
@@ -44,7 +50,7 @@ The training scripts are implemented in the [experiments folder](experiments).
     ```
 3. Run the relevant experiment. e.g.
     ```bash
-    # Finetuning from official pretrained RoMa weights
+    # Fine-tuning from official pretrained RoMa weights
     torchrun --nproc_per_node=8 --nnodes=1 --rdzv_backend=c10d experiments/train_roma.py --gpu_batch_size 3 --use_pretrained_roma
 
     # Training from scratch
