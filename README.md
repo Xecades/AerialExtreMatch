@@ -1,8 +1,14 @@
 # AerialExtreMatch — RoMa
 
+<p align="center">
+    <img src="demo/assets/match.png" alt="example" width=80%>
+    <br>
+    <em>Matches masked by certainty.</em>
+</p>
+
 ## Introduction
 
-This branch contains the code for training from scratch and finetuning the [RoMa](https://arxiv.org/abs/2305.15404) model on our proposed **AerialExtreMatch** dataset. The code is built on top of the [RoMa repo](https://github.com/Parskatt/RoMa). It is recommended to check out the original repo for more details on the model and its usage. We will only cover the essential changes here.
+This branch contains the code for training from scratch and finetuning the [RoMa](https://arxiv.org/abs/2305.15404) model on our proposed **AerialExtreMatch** dataset. The code is built on top of the [RoMa repo](https://github.com/Parskatt/RoMa). It is recommended to check out the original repo for more details on the model and its usage.
 
 ## Checkpoints
 
@@ -14,15 +20,11 @@ Follow the instructions on [RoMa](https://github.com/Parskatt/RoMa).
 
 ## Demo
 
-Two matching demos are provided in the [demos folder](demo). They are slightly adapted from the original RoMa demos for convenience and code clarity.
+Two matching demos are provided in the [demos folder](demo). They are adapted from the official RoMa demos, see [RoMa](https://github.com/Parskatt/RoMa?tab=readme-ov-file#demo--how-to-use) for more details.
 
-See [RoMa](https://github.com/Parskatt/RoMa?tab=readme-ov-file#demo--how-to-use) for more details.
+## Training
 
-## Reproducing Results
-
-The experiments are implemented in the [experiments folder](experiments).
-
-### Training
+The training scripts are implemented in the [experiments folder](experiments).
 
 1. Follow the instructions on [DKM](https://github.com/Parskatt/DKM/blob/main/docs/training.md#megadepth) for downloading and preprocessing the MegaDepth dataset.
 2. Download the [AerialExtreMatch-Train](https://huggingface.co/datasets/Xecades/AerialExtreMatch-Train) dataset and unzip it into the `data/extre` folder.  
@@ -49,13 +51,9 @@ The experiments are implemented in the [experiments folder](experiments).
     torchrun --nproc_per_node=8 --nnodes=1 --rdzv_backend=c10d experiments/train_roma.py --gpu_batch_size 3
     ```
 
-### Testing
-
-TBD.
-
 ## License
 
-TBD.
+[MIT License](LICENSE).
 
 ## Acknowledgement
 
