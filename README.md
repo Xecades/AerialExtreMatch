@@ -18,13 +18,12 @@
 
  - **Code**
    - [**`Benchmark` branch**](https://github.com/Xecades/AerialExtreMatch/tree/Benchmark): source code for the benchmark, including feature matching and localization pipelines for models mentioned in the paper. **(WIP)**
-   - [**`RoMa` branch**](https://github.com/Xecades/AerialExtreMatch/tree/RoMa): the code we use to train our RoMa model. **(WIP)**
+   - [**`RoMa` branch**](https://github.com/Xecades/AerialExtreMatch/tree/RoMa): the code we use to train our RoMa model.
  - **Dataset**
    - [**AerialExtreMatch-Localization**](https://huggingface.co/datasets/Xecades/AerialExtreMatch-Localization): (WIP)
    - [**AerialExtreMatch-Train**](https://huggingface.co/datasets/Xecades/AerialExtreMatch-Train): (WIP)
    - [**AerialExtreMatch-Benchmark**](https://huggingface.co/datasets/Xecades/AerialExtreMatch-Benchmark): (WIP)
- - **Checkpoints**
-   - WIP.
+ - **Checkpoints**: See [[Release]](releases).
 
 ## Introduction
 
