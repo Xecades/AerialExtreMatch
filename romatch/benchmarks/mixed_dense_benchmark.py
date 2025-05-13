@@ -2,19 +2,19 @@ import torch
 import tqdm
 import romatch
 import romatch.utils.writer as writ
-from romatch.datasets import get_megadepth_dataset, get_extredata_dataset, get_mixed_dataset
+from romatch.datasets import get_megadepth_dataset, get_extre_dataset, get_mixed_dataset
 from romatch.utils import warp_kpts
 from romatch.utils.collate import collate_fn_with
 
 
 class MixedDenseBenchmark:
     def __init__(self, h=384, w=512, num_samples=2000, dataset="megadepth") -> None:
-        assert dataset in ["megadepth", "extredata", "mixed"]
+        assert dataset in ["megadepth", "extre", "mixed"]
         self.name = dataset
         self.num_samples = num_samples
 
-        if dataset == "extredata":
-            self.dataset, self.ws = get_extredata_dataset(h, w, train=False)
+        if dataset == "extre":
+            self.dataset, self.ws = get_extre_dataset(h, w, train=False)
         elif dataset == "megadepth":
             self.dataset, self.ws = get_megadepth_dataset(h, w, train=False)
         elif dataset == "mixed":

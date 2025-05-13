@@ -9,7 +9,7 @@ import torch.distributed as dist
 
 import romatch.utils.writer as writ
 from romatch.benchmarks import MixedDenseBenchmark, MixedVisualizeBenchmark
-from romatch.datasets import get_mixed_dataset, get_extredata_dataset, get_megadepth_dataset
+from romatch.datasets import get_mixed_dataset, get_extre_dataset, get_megadepth_dataset
 from romatch.losses.robust_loss import RobustLosses
 from romatch.utils.collate import collate_fn_with
 
@@ -196,7 +196,7 @@ def train(args):
 
     resolution = args.train_resolution
     experiment_name = os.path.splitext(os.path.basename(__file__))[0]
-    if args.use_pretained_roma:
+    if args.use_pretrained_roma:
         experiment_name += "_pretrained_weights"
 
     writ.init_writer(experiment_name, rank)
@@ -211,8 +211,8 @@ def train(args):
         name=experiment_name,
     ).to(device_id)
 
-    if args.use_pretained_roma:
-        # Load pretained weights only if not already trained
+    if args.use_pretrained_roma:
+        # Load pretrained weights only if not already trained
         if not os.path.exists(checkpoint_dir + experiment_name + f"_latest.pth"):
             from romatch.models.model_zoo import weight_urls
             print("Use pretrained weights.")
@@ -233,7 +233,7 @@ def train(args):
 
     if not romatch.TEST_MODE:
         # Data
-        if args.use_pretained_roma:
+        if args.use_pretrained_roma:
             dataset, dataset_ws = get_mixed_dataset(
                 h, w, train=True, mega_percent=0.8)
         else:
@@ -250,7 +250,7 @@ def train(args):
             c=1e-4
         )
 
-    if args.use_pretained_roma:
+    if args.use_pretrained_roma:
         # Use smaller learning rate for pretrained weights
         parameters = [
             {"params": model.encoder.parameters(), "lr": romatch.STEP_SIZE * 5e-6 / 800},
@@ -266,8 +266,8 @@ def train(args):
     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
         optimizer, milestones=[(9*N/romatch.STEP_SIZE)//10])
 
-    extredata_benchmark = MixedDenseBenchmark(
-        h=h, w=w, num_samples=1000, dataset="extredata")
+    extre_benchmark = MixedDenseBenchmark(
+        h=h, w=w, num_samples=1000, dataset="extre")
     megadepth_benchmark = MixedDenseBenchmark(
         h=h, w=w, num_samples=1000, dataset="megadepth")
     mixed_visualize_benchmark = MixedVisualizeBenchmark(
@@ -327,7 +327,7 @@ def train(args):
 
         if rank == 0:
             mixed_visualize_benchmark.benchmark(model)
-            extredata_benchmark.benchmark(model)
+            extre_benchmark.benchmark(model)
             megadepth_benchmark.benchmark(model)
 
 
@@ -342,7 +342,7 @@ if __name__ == "__main__":
     parser.add_argument("--train_resolution", default="medium")
     parser.add_argument("--gpu_batch_size", default=8, type=int)
     parser.add_argument("--skip_training", action="store_true")
-    parser.add_argument("--use_pretained_roma", action="store_true")
+    parser.add_argument("--use_pretrained_roma", action="store_true")
     parser.add_argument("--seed", default=2333, type=int)
 
     args, _ = parser.parse_known_args()

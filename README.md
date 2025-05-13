@@ -1,19 +1,12 @@
-# ExtreData: Lorem Ipsum Dolor Sit Amet
-### [Project Page]() | [Paper]()
-
-<br />
-
-> ExtreData: Lorem Ipsum Dolor Sit Amet  
-> [John Doe](), [Jane Doe]()  
-> NeurIPS 2025
+# AerialExtreMatch — RoMa
 
 ## Introduction
 
-This repo contains the code for training from scratch and finetuning the [RoMa](https://arxiv.org/abs/2305.15404) model on our proposed ExtreData dataset. The code is built on top of the [RoMa repo](https://github.com/Parskatt/RoMa). It is recommended to check out the original repo for more details on the model and its usage. We will only cover the essential changes here.
+This branch contains the code for training from scratch and finetuning the [RoMa](https://arxiv.org/abs/2305.15404) model on our proposed **AerialExtreMatch** dataset. The code is built on top of the [RoMa repo](https://github.com/Parskatt/RoMa). It is recommended to check out the original repo for more details on the model and its usage. We will only cover the essential changes here.
 
 ## Checkpoints
 
-We provide our pretained weights for the ExtreData dataset at [[Link]]().
+We provide our finetuned weights for the AerialExtreMatch dataset at [[Release]](https://github.com/Xecades/AerialExtreMatch/releases).
 
 ## Setup / Settings / Usage
 
@@ -32,11 +25,11 @@ The experiments are implemented in the [experiments folder](experiments).
 ### Training
 
 1. Follow the instructions on [DKM](https://github.com/Parskatt/DKM/blob/main/docs/training.md#megadepth) for downloading and preprocessing the MegaDepth dataset.
-2. Download the [ExtreData]() dataset and unzip it into the `data/extredata` folder.  
+2. Download the [AerialExtreMatch-Train](https://huggingface.co/datasets/Xecades/AerialExtreMatch-Train) dataset and unzip it into the `data/extre` folder.  
    By now you should have the following folder structure in `data`:
     ```
     data
-    ├── extredata
+    ├── extre
     │   ├── scene_info
     │   └── Basaier0, ...
     └── megadepth
@@ -49,8 +42,8 @@ The experiments are implemented in the [experiments folder](experiments).
     ```
 3. Run the relevant experiment. e.g.
     ```bash
-    # Finetuning from pretained RoMa weights
-    torchrun --nproc_per_node=8 --nnodes=1 --rdzv_backend=c10d experiments/train_roma.py --gpu_batch_size 3 --use_pretained_roma
+    # Finetuning from official pretrained RoMa weights
+    torchrun --nproc_per_node=8 --nnodes=1 --rdzv_backend=c10d experiments/train_roma.py --gpu_batch_size 3 --use_pretrained_roma
 
     # Training from scratch
     torchrun --nproc_per_node=8 --nnodes=1 --rdzv_backend=c10d experiments/train_roma.py --gpu_batch_size 3
@@ -66,9 +59,4 @@ TBD.
 
 ## Acknowledgement
 
-Our codebase builds on the code in [RoMa](https://github.com/Parskatt/RoMa).
-
-## BibTeX
-
-```bibtex
-```
+This codebase builds on the code in [RoMa](https://github.com/Parskatt/RoMa).

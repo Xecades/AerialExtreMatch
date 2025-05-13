@@ -1,20 +1,20 @@
-from romatch.datasets import ExtredataBuilder
+from romatch.datasets import ExtreBuilder
 from romatch.datasets import MegadepthBuilder
 from torch.utils.data import ConcatDataset
 import torch
 
 
 def get_mixed_dataset(h, w, train=True, mega_percent=0.1):
-    extredata_scenes, extredata_weight = get_extredata_dataset(h, w, train)
+    extre_scenes, extre_weight = get_extre_dataset(h, w, train)
     megadepth_scenes, megadepth_weight = get_megadepth_dataset(h, w, train)
 
-    scenes = ConcatDataset([extredata_scenes, megadepth_scenes])
+    scenes = ConcatDataset([extre_scenes, megadepth_scenes])
 
-    extredata_weight = extredata_weight / extredata_weight.sum()
+    extre_weight = extre_weight / extre_weight.sum()
     megadepth_weight = megadepth_weight / megadepth_weight.sum()
     weight = torch.cat(
         [
-            extredata_weight * (1 - mega_percent),
+            extre_weight * (1 - mega_percent),
             megadepth_weight * mega_percent,
         ]
     )
@@ -22,8 +22,8 @@ def get_mixed_dataset(h, w, train=True, mega_percent=0.1):
     return scenes, weight
 
 
-def get_extredata_dataset(h, w, train=True):
-    builder = ExtredataBuilder(data_root="data/extredata")
+def get_extre_dataset(h, w, train=True):
+    builder = ExtreBuilder(data_root="data/extre")
     if train:
         use_horizontal_flip_aug = True
         use_randaug = True

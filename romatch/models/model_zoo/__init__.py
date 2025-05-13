@@ -4,8 +4,7 @@ import torch
 
 weight_urls = {
     "romatch": {
-        # TODO: add the URL for the external model
-        "extre": "file:///home/local/Develop/ExtreRoMa/workspace/models/roma_extre.714912.pth",
+        "extre": "https://github.com/Xecades/AerialExtreMatch/releases/download/v1.0.0/roma_extre.pth",
         "outdoor": "https://github.com/Parskatt/storage/releases/download/roma/roma_outdoor.pth",
     },
     "dinov2": "https://dl.fbaipublicfiles.com/dinov2/dinov2_vitl14/dinov2_vitl14_pretrain.pth",

@@ -1,6 +1,5 @@
 import os
 from PIL import Image
-from torch.utils.data import ConcatDataset
 from romatch.utils import get_tuple_transform_ops, get_depth_tuple_transform_ops
 from romatch.utils.transforms import RandomColorAug
 import torchvision.transforms.functional as tvf
@@ -13,7 +12,7 @@ if True:
     import cv2
 
 
-class ExtredataScene:
+class ExtreScene:
     def __init__(
         self,
         data_root: str,
@@ -200,8 +199,8 @@ class ExtredataScene:
         return data_dict
 
 
-class ExtredataBuilder:
-    def __init__(self, data_root: str = "./data/extredata") -> None:
+class ExtreBuilder:
+    def __init__(self, data_root: str = "./data/extre") -> None:
         self.data_root = data_root
         self.scene_info_root = os.path.join(data_root, "scene_info")
         self.all_scenes = set(os.listdir(self.scene_info_root))
@@ -234,7 +233,7 @@ class ExtredataBuilder:
                 continue
             scene_info_path = os.path.join(self.scene_info_root, scene_name)
             scene_info = np.load(scene_info_path, allow_pickle=True)
-            scene = ExtredataScene(
+            scene = ExtreScene(
                 data_root=self.data_root,
                 scene_info=scene_info,
                 scene_name=scene_name,
