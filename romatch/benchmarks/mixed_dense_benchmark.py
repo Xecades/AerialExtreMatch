@@ -112,9 +112,9 @@ class MixedDenseBenchmark:
                 )
         results = {
             "epe": gd_tot.item() / len(dataloader),
-            "mega_pck_1": pck_1_tot.item() / len(dataloader),
-            "mega_pck_3": pck_3_tot.item() / len(dataloader),
-            "mega_pck_5": pck_5_tot.item() / len(dataloader),
+            "pck_1": pck_1_tot.item() / len(dataloader),
+            "pck_3": pck_3_tot.item() / len(dataloader),
+            "pck_5": pck_5_tot.item() / len(dataloader),
         }
         for metric_name, value in results.items():
             writ.writer.add_scalar(
