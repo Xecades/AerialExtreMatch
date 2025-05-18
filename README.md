@@ -10,7 +10,7 @@
 <p align="center">
     <img src="assets/teaser.png" alt="teaser" width=100%>
     <br>
-    <em>Our proposed <b>AerialExtreMatch</b> benchmark includes three datasets: <b>Train Pair</b>, <b>Evaluation Pair</b>, and <b>Localization</b>. And they are readily available for public access.</em>
+    <em>We introduce <b>AerialExtreMatch</b>, a large-scale, high-fidelity benchmark tailored for extreme-view image matching and UAV localization. It consists of three datasets: <b>Train Pair</b>, <b>Evaluation Pair</b>, and <b>Localization</b>. All code and datasets are readily available for public access.</em>
 </p>
 
 > [!WARNING]  
