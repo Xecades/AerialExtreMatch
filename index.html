@@ -35,8 +35,8 @@
             <h1 style="font-weight: bold">
               <b>
                 <span style="color: #78aa58">AerialExtreMatch</span>: A Benchmark for <span
-                  style="color: #6589bf">Extreme-View</span> Image Matching and <span
-                  style="color: #c68b5b">Localization</span><br>
+                  style="color: #6589bf">Extreme-View</span> <span style="color: #c86b4c">Image
+                  Matching</span> and <span style="color: #c68b5b">Localization</span><br>
               </b>
             </h1>
             <h4 style="color: #5a6268;">2025</h4>
@@ -83,8 +83,21 @@
         <div class="col-12">
           <h3>TL;DR</h3>
           <hr style="margin-top: 0px" />
+          <img src="img/teaser-web.png" style="display: block; margin: 10px auto; width: 90%; min-width: 950px;">
           <p class="text-left">
-            WIP.
+            We introduce <span style="color: #78aa58; font-weight: bold">AerialExtreMatch<sup>*</sup></span>, a large-scale,
+            high-fidelity dataset tailored for extreme-view image matching and UAV localization. It consists of:<br>
+            <span style="font-weight: 500;">(a) Train Pair:</span> a large-scale synthetic dataset containing 1.5
+            million RGB–depth image pairs rendered from high-quality 3D scenes, simulating diverse UAV and satellite
+            viewpoints to enable robust training of image matching models.<br>
+            <span style="font-weight: 500;">(b) Evaluation Pair:</span> a 32-level benchmark of ~30,000 pairs graded by
+            overlap, scale, and pitch to enable fine-grained evaluation of image matching models.<br>
+            <span style="font-weight: 500;">(c) Localization:</span> a real-world UAV localization set using DJI M300
+            RTK+H20T queries matched against both high-quality UAV-derived orthomosaic/DSM and lower-quality satellite
+            maps.<br>
+            <i>* All code and datasets are readily available at <a
+                href="https://github.com/Xecades/AerialExtreMatch?tab=readme-ov-file#resources"
+                target="_blank">GitHub</a>.</i>
           </p>
         </div>
       </div>
