@@ -1,0 +1,5 @@
+default: &default
+  class: "MARoMa"
+  checkpoints_path: '/media/guan/data/sparse/ExtreBenchmark/pretrained/maroma/roma_pretrained.ckpt'
+example:
+  <<: *default

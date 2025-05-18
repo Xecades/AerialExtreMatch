@@ -1,4 +1,5 @@
 default: &default
+  ckpt: '"/media/guan/新加卷/train_roma_pretrained_weights_latest_1.pth"'
   class: "RoMa"
 example:
   <<: *default

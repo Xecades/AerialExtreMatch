@@ -14,10 +14,11 @@ from immatch.utils.data_io import load_im_tensor
 class RoMa(Matching):
     def __init__(self, args):
         super().__init__()
-        # raise NotImplementedError("RoMa还有问题，得到的kpts超过了图像范围，可能需要过滤一下？")
-
-        self.model = roma_outdoor(self.device,weights=torch.load("/media/guan/新加卷/train_roma_pretrained_weights_latest_1.pth")['model'])
-        # self.model = roma_outdoor(self.device)
+        if args["ckpt"] != None:
+            self.model = roma_outdoor(self.device,weights=torch.load(args["ckpt"])['model'], coarse_res=[672,672])
+        else:
+            # origin
+            self.model = roma_outdoor(self.device, coarse_res=[672,672])
         self.name = f"RoMa"
         print(f"Initialize {self.name}")
 

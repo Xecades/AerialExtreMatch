@@ -137,7 +137,11 @@ dmypy.json
 
 # 
 pretrained/
-third_party/
+third_party/DeDode
+third_party/eloftr
+third_party/LightGlue
+third_party/roma
+third_party/xfeat
 docs/
 
 temp/

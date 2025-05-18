@@ -19,7 +19,7 @@ def load_config(config_file):
         config = yaml.safe_load(file)
     return config
 
-config_path = "/media/guan/data/sparse/ExtreBenchmark/localization_config/config_roma_seq2.yml"
+config_path = "/media/guan/data/sparse/ExtreBenchmark/localization_config/config_roma_syn.yml"
 config = load_config(config_path)
 
 # setting initialization

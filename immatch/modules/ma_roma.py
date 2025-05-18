@@ -12,25 +12,25 @@ import warnings
 import torchvision.transforms.functional as F
 import cv2
 
-class GIMRoMa(Matching):
+class MARoMa(Matching):
     def __init__(self, args):
         super().__init__()
+        # raise NotImplementedError("RoMa还有问题，得到的kpts超过了图像范围，可能需要过滤一下？")
 
         self.model = RoMa(img_size=[672])
         self.device = "cuda"
 
-        state_dict = torch.load(args["checkpoints_path"], map_location='cpu')
-        if 'state_dict' in state_dict.keys(): state_dict = state_dict['state_dict']
-        for k in list(state_dict.keys()):
-            if k.startswith('model.'):
-                state_dict[k.replace('model.', '', 1)] = state_dict.pop(k)
-        self.model.load_state_dict(state_dict)
+        state_dict = torch.load(args["checkpoints_path"], map_location='cpu') 
+        for k in list(state_dict['state_dict'].keys()):
+            if k.startswith('matcher.model.'):
+                state_dict['state_dict'][k.replace('matcher.model.', '', 1)] = state_dict['state_dict'].pop(k)
+        self.model.load_state_dict(state_dict['state_dict'])
 
         self.model = self.model.eval().to(self.device)
 
         
         # self.model = roma_outdoor(self.device)
-        self.name = f"GIMRoMa"
+        self.name = f"MARoMa"
         print(f"Initialize {self.name}")
     
     def get_padding_size(self, image, h, w):
