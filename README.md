@@ -1,5 +1,5 @@
 # AerialExtreMatch: A Benchmark for Extreme-View Image Matching and Localization
-### [Project Page](https://extre.xecades.xyz/) | Paper (WIP)
+### [Project Page](https://xecades.github.io/AerialExtreMatch/) | Paper (WIP)
 
 <br />
 
