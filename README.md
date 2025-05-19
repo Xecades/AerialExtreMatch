@@ -4,7 +4,8 @@
 <br />
 
 > **AerialExtreMatch: A Benchmark for Extreme-View Image Matching and Localization**  
-> Rouwan Wu, Zhe Huang, Xingyi He, Yan Liu, Shen Yan, Sida Peng, Maojun Zhang, Xiaowei Zhou  
+> [Rouwan Wu<sup>1</sup>](https://github.com/RingoWRW), [Zhe Huang<sup>2</sup>](https://github.com/Xecades), [Xingyi He<sup>2</sup>](https://hxy-123.github.io/), [Yan Liu<sup>3</sup>](https://faculty.hdu.edu.cn/jsjxy/ly2_21682/main.htm), [Shen Yan<sup>1</sup>](https://openreview.net/profile?id=~Shen_Yan6), [Sida Peng<sup>2</sup>](https://pengsida.net/), [Maojun Zhang<sup>1&dagger;</sup>](https://orcid.org/0000-0001-6748-0545), [Xiaowei Zhou<sup>2&dagger;</sup>](https://xzhou.me/)  
+> National University of Defense Technology<sup>1</sup>, State Key Lab of CAD&CG, Zhejiang University<sup>2</sup>, Huazhong University of Science and Technology<sup>3</sup>  
 > <!-- NeurIPS --> 2025
 
 <p align="center">
