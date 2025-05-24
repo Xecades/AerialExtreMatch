@@ -87,8 +87,9 @@
           <hr style="margin-top: 0px" />
           <img src="img/teaser-web.png" style="display: block; margin: 10px auto; width: 90%; min-width: 950px;">
           <p class="text-left">
-            We introduce <span style="color: #78aa58; font-weight: bold">AerialExtreMatch<sup>*</sup></span>, a large-scale,
-            high-fidelity dataset tailored for extreme-view image matching and UAV localization. It consists of:<br>
+            We introduce <span style="color: #78aa58; font-weight: bold">AerialExtreMatch<sup>*</sup></span>, a
+            large-scale, high-fidelity dataset tailored for extreme-view image matching and UAV localization. It
+            consists of:<br>
             <span style="font-weight: 500;">(a) Train Pair:</span> a large-scale synthetic dataset containing 1.5
             million RGB–depth image pairs rendered from high-quality 3D scenes, simulating diverse UAV and satellite
             viewpoints to enable robust training of image matching models.<br>
@@ -100,6 +101,63 @@
             <i>* All code and datasets are readily available at <a
                 href="https://github.com/Xecades/AerialExtreMatch?tab=readme-ov-file#resources"
                 target="_blank">GitHub</a>.</i>
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+          <h3>Method</h3>
+          <hr style="margin-top: 0px" />
+
+          <img src="img/method.png" style="display: block; margin: 10px auto; width: 70%; min-width: 840px;">
+          <p class="text-left">
+            <strong>Pipeline</strong> for collecting RGB-depth pairs and estimating the co-visibility mask.
+          <ul>
+            <li><strong>Left:</strong> <i>Training data generation</i>. Cesium for Unreal provides high-quality 3D
+              models, enabling the rendering of RGB and depth images from diverse aerial viewpoints by sampling
+              camera poses with varying altitudes and angles.</li>
+            <li><strong>Right:</strong> <i>Co-visibility estimation</i>. Given intrinsics K, extrinsics P, and RGB-depth
+              image pairs (I<sub>1</sub>, D<sub>1</sub>) and (I<sub>2</sub>, D<sub>2</sub>), the co-visible masks
+              C<sub>12</sub> and C<sub>21</sub> are computed by warping 3D points from one view to the other via
+              geometric reprojection.</li>
+          </ul>
+          The RGB-depth image pairs generated from the above pipeline are referred to as <b>Train Pair</b>, which are
+          used to train image matching models. The <b>Evaluation Pair</b> is derived from <b>Train Pair</b>. The two do
+          not intersect with each other.
+          </p>
+
+
+          <hr style="margin-top: 0px" />
+          <img src="img/benchmark-web.png" style="display: block; margin: 10px auto; width: 90%; min-width: 980px;">
+          <p class="text-left">
+            <strong>Evaluation Pair.</strong> We construct the <b>Evaluation Pair</b> by categorizing image pairs
+            into discrete difficulty levels. For each image pair, we compute the corresponding metrics and discretize
+            them into the following bins:
+          <ul>
+            <li><strong>Overlap Ratio</strong> (four bins): &lt;20, 20–40, 40–60, and &gt;60;</li>
+            <li><strong>Pitch Difference</strong> (four bins): 50–55, 55–60, 60–65, and 65–70 degrees;</li>
+            <li><strong>Scale Variation</strong> (two bins): 1–2, and &gt;2;</li>
+          </ul>
+          </p>
+
+
+          <hr style="margin-top: 0px" />
+          <p class="text-left">
+            <strong>Localization.</strong>
+          <ul>
+            <li><strong>Query Image Collection:</strong> Captured using DJI M300 RTK drone + DJI H20T camera. Both the
+              drone’s altitude and the camera’s pitch angle are carefully controlled during data acquisition. Accurate
+              camera poses are estimated using Render2Loc.</li>
+            <li><strong>Reference Data Preparation:</strong> Captured using DJI M300 RTK drone + SHARE PSDK 102S. The
+              aerial imagery is processed using modern 3D reconstruction techniques to generate a digital orthophoto map
+              (DOM) and a digital surface model (DSM). In addition, satellite-derived DSM and DOM data covering the same
+              geographic region are acquired from commercial providers and spatially aligned.</li>
+          </ul>
           </p>
         </div>
       </div>
