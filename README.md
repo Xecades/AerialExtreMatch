@@ -32,10 +32,6 @@
    - [**AerialExtreMatch-Localization**](https://huggingface.co/datasets/Xecades/AerialExtreMatch-Localization): corresponds to **Localization** set.
  - **Checkpoints**: see [[Release]](releases).
 
-## Introduction
-
-WIP.
-
 ## License
 
 [MIT License](LICENSE)
